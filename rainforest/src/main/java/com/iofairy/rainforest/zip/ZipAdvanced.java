@@ -16,8 +16,7 @@
 package com.iofairy.rainforest.zip;
 
 import com.iofairy.except.UnexpectedParameterException;
-import com.iofairy.falcon.io.MultiByteArrayInputStream;
-import com.iofairy.falcon.io.MultiByteArrayOutputStream;
+import com.iofairy.falcon.io.*;
 import com.iofairy.lambda.RT3;
 import com.iofairy.lambda.RT4;
 import com.iofairy.rainforest.io.IOStreams;
@@ -25,6 +24,10 @@ import com.iofairy.tcf.Close;
 import com.iofairy.top.G;
 import com.iofairy.tuple.Tuple;
 import com.iofairy.tuple.Tuple2;
+import org.apache.commons.compress.archivers.ArchiveEntry;
+import org.apache.commons.compress.archivers.zip.ZipArchiveEntry;
+import org.apache.commons.compress.archivers.zip.ZipArchiveInputStream;
+import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream;
 import org.apache.commons.compress.compressors.gzip.*;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOUtils;
@@ -34,7 +37,6 @@ import java.io.OutputStream;
 import java.nio.charset.Charset;
 import java.util.*;
 import java.util.function.BiPredicate;
-import java.util.zip.*;
 
 import static com.iofairy.rainforest.zip.ArchiveFormat.*;
 
@@ -363,14 +365,14 @@ public class ZipAdvanced {
                                          RT3<InputStream, Integer, String, T, Exception> otherAction) throws Exception {
         Charset zipEntryNameCharset = fileNameCharsetMap.get(ZIP);
         ArrayList<T> ts = new ArrayList<>();
-        ZipInputStream zipis = null;
+        ZipArchiveInputStream zipis = null;
         try {
-            zipis = new ZipInputStream(is, zipEntryNameCharset);
+            zipis = new ZipArchiveInputStream(is, zipEntryNameCharset.name());
 
             int newUnzipTimes = unzipTimes + 1;
             int newUnzipLevel = unzipLevel < 0 ? unzipLevel : unzipLevel - 1;
 
-            ZipEntry entry;
+            ArchiveEntry entry;
             while ((entry = zipis.getNextEntry()) != null) {
                 String entryFileName = entry.getName();
                 if (entry.isDirectory()) continue;
@@ -682,22 +684,22 @@ public class ZipAdvanced {
                                                              RT4<InputStream, OutputStream, Integer, String, T, Exception> otherAction) throws Exception {
         Charset zipEntryNameCharset = fileNameCharsetMap.get(ZIP);
         ArrayList<T> ts = new ArrayList<>();
-        ZipInputStream zipis = null;
+        ZipArchiveInputStream zipis = null;
         MultiByteArrayOutputStream baos = new MultiByteArrayOutputStream();
-        ZipOutputStream zos = null;
+        ZipArchiveOutputStream zos = null;
         try {
-            zipis = new ZipInputStream(is, zipEntryNameCharset);
-            zos = new ZipOutputStream(baos);
+            zipis = new ZipArchiveInputStream(is, zipEntryNameCharset.name());
+            zos = new ZipArchiveOutputStream(baos);
 
             int newUnzipTimes = unzipTimes + 1;
             int newUnzipLevel = unzipLevel < 0 ? unzipLevel : unzipLevel - 1;
 
-            ZipEntry entry;
+            ArchiveEntry entry;
             while ((entry = zipis.getNextEntry()) != null) {
                 String entryFileName = entry.getName();
-                zos.putNextEntry(new ZipEntry(entryFileName));
+                zos.putArchiveEntry(new ZipArchiveEntry(entryFileName));
                 if (entry.isDirectory()) {
-                    zos.closeEntry();
+                    zos.closeArchiveEntry();
                     continue;
                 }
                 String extension = FilenameUtils.getExtension(entryFileName);
@@ -754,7 +756,7 @@ public class ZipAdvanced {
                 for (byte[] bytes : byteArrays) {
                     zos.write(bytes);
                 }
-                zos.closeEntry();
+                zos.closeArchiveEntry();
             }
         } finally {
             if (isCloseStream) {
