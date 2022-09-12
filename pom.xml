@@ -6,7 +6,7 @@
 
     <groupId>com.iofairy</groupId>
     <artifactId>rainforest-parent</artifactId>
-    <version>0.0.2</version>
+    <version>0.0.3</version>
     <modules>
         <module>rainforest</module>
         <module>rainforest-tests</module>
@@ -23,10 +23,9 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
         <functional.version>0.3.10</functional.version>
-        <falcon.version>0.3.4</falcon.version>
+        <falcon.version>0.3.6</falcon.version>
 
         <commons-compress.version>1.21</commons-compress.version>
-        <commons-io.version>2.11.0</commons-io.version>
     </properties>
 
     <dependencyManagement>
@@ -48,12 +47,6 @@
                 <groupId>org.apache.commons</groupId>
                 <artifactId>commons-compress</artifactId>
                 <version>${commons-compress.version}</version>
-            </dependency>
-
-            <dependency>
-                <groupId>commons-io</groupId>
-                <artifactId>commons-io</artifactId>
-                <version>${commons-io.version}</version>
             </dependency>
 
         </dependencies>

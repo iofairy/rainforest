@@ -15,11 +15,12 @@
  */
 package com.iofairy.rainforest.zip;
 
+import com.iofairy.falcon.fs.FilePath;
+import com.iofairy.falcon.io.IOs;
 import com.iofairy.falcon.io.MultiByteArrayOutputStream;
 import com.iofairy.tcf.Close;
 import com.iofairy.top.G;
 import org.apache.commons.compress.compressors.gzip.*;
-import org.apache.commons.io.IOUtils;
 
 import java.io.InputStream;
 import java.nio.charset.Charset;
@@ -31,7 +32,7 @@ import java.util.Objects;
  *
  * @since 0.0.1
  */
-public class ZipUtils {
+public class ZipKit {
 
     /**
      * 获取gzip中的文件名称。
@@ -45,8 +46,9 @@ public class ZipUtils {
         if (gcis == null && G.isEmpty(gzipFileName)) throw new NullPointerException("参数 gcis 与 gzipFileName 不能都为 null！");
         String filename = gcis == null ? null : gcis.getMetaData().getFilename();
         if (G.isEmpty(filename)) {
-            Objects.requireNonNull(gzipFileName);
-            return GzipUtils.getUncompressedFilename(gzipFileName);
+            Objects.requireNonNull(gzipFileName, "参数 gzipFileName 不能都为 null！");
+            String newGzipFileName = FilePath.infoAuto(gzipFileName).getFileName().name;
+            return GzipUtils.getUncompressedFilename(newGzipFileName);
         } else {
             return new String(filename.getBytes(StandardCharsets.ISO_8859_1), gzipNameCharset);
         }
@@ -69,7 +71,7 @@ public class ZipUtils {
             GzipParameters gzipParameters = new GzipParameters();
             gzipParameters.setFilename(new String(fileName.getBytes(fileNameCharset), StandardCharsets.ISO_8859_1));
             gcos = new GzipCompressorOutputStream(bos, gzipParameters);
-            IOUtils.copy(in, gcos);
+            IOs.copy(in, gcos);
         } finally {
             Close.close(gcos);
         }

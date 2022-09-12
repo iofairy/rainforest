@@ -15,13 +15,12 @@
  */
 package com.iofairy.rainforest.zip;
 
-import com.iofairy.except.UnexpectedParameterException;
+import com.iofairy.falcon.fs.FileName;
 import com.iofairy.falcon.io.*;
 import com.iofairy.lambda.RT3;
 import com.iofairy.lambda.RT4;
-import com.iofairy.rainforest.io.IOStreams;
+import com.iofairy.rainforest.zip.attr.*;
 import com.iofairy.tcf.Close;
-import com.iofairy.top.G;
 import com.iofairy.tuple.Tuple;
 import com.iofairy.tuple.Tuple2;
 import org.apache.commons.compress.archivers.ArchiveEntry;
@@ -29,8 +28,6 @@ import org.apache.commons.compress.archivers.zip.ZipArchiveEntry;
 import org.apache.commons.compress.archivers.zip.ZipArchiveInputStream;
 import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream;
 import org.apache.commons.compress.compressors.gzip.*;
-import org.apache.commons.io.FilenameUtils;
-import org.apache.commons.io.IOUtils;
 
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -46,98 +43,14 @@ import static com.iofairy.rainforest.zip.ArchiveFormat.*;
  * @since 0.0.1
  */
 public class ZipAdvanced {
-    /**
-     * ZIP高级方法中支持的归档格式类型
-     */
-    private static final ArchiveFormat[] SUPPORTED_ARCHIVE_FORMATS = {ZIP, GZIP};
-
-    /**
-     * 归档压缩包默认的文件名编码
-     */
-    private static Map<ArchiveFormat, Charset> defaultFileNameCharsetMap = new HashMap<>();
-
-    static {
-        Charset charset = Charset.forName("GBK");
-        for (ArchiveFormat supportedArchiveFormat : SUPPORTED_ARCHIVE_FORMATS) {
-            defaultFileNameCharsetMap.put(supportedArchiveFormat, charset);
-        }
-    }
-
-    public static Map<ArchiveFormat, Charset> getDefaultFileNameCharsetMap() {
-        return defaultFileNameCharsetMap;
-    }
-
-    public static void setDefaultFileNameCharsetMap(Map<ArchiveFormat, Charset> fileNameCharsetMap) {
-        Objects.requireNonNull(fileNameCharsetMap, "Parameter `fileNameCharsetMap` must be non-null!");
-        ZipAdvanced.defaultFileNameCharsetMap = fileNameCharsetMap;
-    }
-
-    /**
-     * 判断一个归档格式是否支持ZIP高级方法
-     *
-     * @param archiveFormat 归档格式
-     * @return 是否支持
-     */
-    public static boolean isSupported(ArchiveFormat archiveFormat) {
-        return Arrays.asList(SUPPORTED_ARCHIVE_FORMATS).contains(archiveFormat);
-    }
-
-    /**
-     * 判断一组归档格式是否支持ZIP高级方法
-     *
-     * @param archiveFormats 一组归档格式
-     * @throws UnexpectedParameterException 当有元素不支持时，抛出此异常
-     */
-    public static void checkIsSupported(ArchiveFormat[] archiveFormats) {
-        List<ArchiveFormat> supportedArchiveFormats = Arrays.asList(SUPPORTED_ARCHIVE_FORMATS);
-        for (ArchiveFormat archiveFormat : archiveFormats) {
-            if (!supportedArchiveFormats.contains(archiveFormat)) {
-                throw new UnexpectedParameterException("Unsupported ArchiveFormat `" + archiveFormat + "`, only supported: " + supportedArchiveFormats);
-            }
-        }
-    }
-
-    /**
-     * 判断一组归档格式的文件名编码是否未设置，或被设置为 {@code null} 值
-     *
-     * @param archiveFormats     一组归档格式
-     * @param fileNameCharsetMap 所提供的归档格式对应的文件名编码所存放的 map
-     */
-    private static void checkNullCharset(ArchiveFormat[] archiveFormats, Map<ArchiveFormat, Charset> fileNameCharsetMap) {
-        for (ArchiveFormat archiveFormat : archiveFormats) {
-            if (!fileNameCharsetMap.containsKey(archiveFormat) || fileNameCharsetMap.get(archiveFormat) == null) {
-                throw new RuntimeException(G.toString(archiveFormats) + "'s filename Charset must be set in the `fileNameCharsetMap`, " +
-                        "their filename Charset must be non-null！");
-            }
-        }
-    }
-
-    /**
-     * 检验 needUnZipFormats 与 fileNameCharsetMap 是否合法
-     *
-     * @param needUnZipFormats   需要解压的归档格式
-     * @param fileNameCharsetMap 需要解压的格式对应的文件名编码
-     * @return 返回检验通过的 needUnZipFormats 和 fileNameCharsetMap
-     */
-    private static Tuple2<List<ArchiveFormat>, Map<ArchiveFormat, Charset>> checkParameters(ArchiveFormat[] needUnZipFormats,
-                                                                                            Map<ArchiveFormat, Charset> fileNameCharsetMap) {
-        if (needUnZipFormats == null) needUnZipFormats = SUPPORTED_ARCHIVE_FORMATS;
-        if (G.isEmpty(fileNameCharsetMap)) fileNameCharsetMap = defaultFileNameCharsetMap;
-
-        checkIsSupported(needUnZipFormats);
-        checkNullCharset(needUnZipFormats, fileNameCharsetMap);
-
-        return Tuple.of(Arrays.asList(needUnZipFormats), fileNameCharsetMap);
-    }
 
     /**
      * gzip包的处理逻辑（自动解压）<br>
      * <b>注：内部会自动关闭 InputStream 输入流</b>
      *
      * @param is                      输入流
-     * @param fileNameCharsetMap      归档格式文件名编码
+     * @param zipFileName             压缩包文件名
      * @param unzipLevel              解压层级。-1：无限解压，碰到压缩包就解压；0、1：只解压当前压缩包；&gt;1：解压次数
-     * @param gzipFileName            gzip包的包名
      * @param unzipFilter             内部压缩包的名称过滤 {@code BiPredicate<Integer, String>(压缩包的第几层, 文件名)}
      * @param otherFilter             除压缩包以外的文件名称过滤 {@code BiPredicate<Integer, String>(压缩包的第几层, 文件名)}
      * @param beforeAfterActionFilter 压缩包解压缩前后的Action前的过滤 {@code BiPredicate<Integer, String>(压缩包的第几层, 文件名)}
@@ -148,17 +61,14 @@ public class ZipAdvanced {
      * @throws Exception 处理过程可能抛异常
      */
     public static <T> List<T> gzipHandle(InputStream is,
-                                         Map<ArchiveFormat, Charset> fileNameCharsetMap,
+                                         ZipFileName zipFileName,
                                          int unzipLevel,
-                                         String gzipFileName,
                                          BiPredicate<Integer, String> unzipFilter,
                                          BiPredicate<Integer, String> otherFilter,
                                          BiPredicate<Integer, String> beforeAfterActionFilter,
                                          RT3<InputStream, Integer, String, T, Exception> beforeUnzipAction,
                                          RT3<InputStream, Integer, String, T, Exception> otherAction) throws Exception {
-        Tuple2<List<ArchiveFormat>, Map<ArchiveFormat, Charset>> formatsAndMap = checkParameters(null, fileNameCharsetMap);
-        return gzipHandle(is, formatsAndMap._1, formatsAndMap._2, 1, unzipLevel, gzipFileName, true,
-                unzipFilter, otherFilter, beforeAfterActionFilter, beforeUnzipAction, otherAction);
+        return gzipHandle(is, null, zipFileName, unzipLevel, unzipFilter, otherFilter, beforeAfterActionFilter, beforeUnzipAction, otherAction);
     }
 
     /**
@@ -166,10 +76,9 @@ public class ZipAdvanced {
      * <b>注：内部会自动关闭 InputStream 输入流</b>
      *
      * @param is                      输入流
-     * @param needUnZipFormats        需要解压的归档格式（必须是支持的格式 {@link #isSupported(ArchiveFormat)}），不需要解压的格式则按普通文件处理
-     * @param fileNameCharsetMap      归档格式文件名编码
+     * @param zaConfig                解压缩配置
+     * @param zipFileName             压缩包文件名
      * @param unzipLevel              解压层级。-1：无限解压，碰到压缩包就解压；0、1：只解压当前压缩包；&gt;1：解压次数
-     * @param gzipFileName            gzip包的包名
      * @param unzipFilter             内部压缩包的名称过滤 {@code BiPredicate<Integer, String>(压缩包的第几层, 文件名)}
      * @param otherFilter             除压缩包以外的文件名称过滤 {@code BiPredicate<Integer, String>(压缩包的第几层, 文件名)}
      * @param beforeAfterActionFilter 压缩包解压缩前后的Action前的过滤 {@code BiPredicate<Integer, String>(压缩包的第几层, 文件名)}
@@ -180,18 +89,16 @@ public class ZipAdvanced {
      * @throws Exception 处理过程可能抛异常
      */
     public static <T> List<T> gzipHandle(InputStream is,
-                                         ArchiveFormat[] needUnZipFormats,
-                                         Map<ArchiveFormat, Charset> fileNameCharsetMap,
+                                         ZAConfig zaConfig,
+                                         ZipFileName zipFileName,
                                          int unzipLevel,
-                                         String gzipFileName,
                                          BiPredicate<Integer, String> unzipFilter,
                                          BiPredicate<Integer, String> otherFilter,
                                          BiPredicate<Integer, String> beforeAfterActionFilter,
                                          RT3<InputStream, Integer, String, T, Exception> beforeUnzipAction,
                                          RT3<InputStream, Integer, String, T, Exception> otherAction) throws Exception {
-        Tuple2<List<ArchiveFormat>, Map<ArchiveFormat, Charset>> formatsAndMap = checkParameters(needUnZipFormats, fileNameCharsetMap);
-        return gzipHandle(is, formatsAndMap._1, formatsAndMap._2, 1, unzipLevel, gzipFileName, true,
-                unzipFilter, otherFilter, beforeAfterActionFilter, beforeUnzipAction, otherAction);
+        return gzipHandle(is, zaConfig == null ? ZAConfig.DEFAULT_ZACONFIG : zaConfig, zipFileName == null ? ZipFileName.of() : zipFileName.clone(),
+                1, unzipLevel, true, unzipFilter, otherFilter, beforeAfterActionFilter, beforeUnzipAction, otherAction);
     }
 
     /**
@@ -199,11 +106,10 @@ public class ZipAdvanced {
      * <b>注：内部会自动关闭 InputStream 输入流</b>
      *
      * @param is                      输入流
-     * @param needUnZipFormats        需要解压的归档格式（必须是支持的格式 {@link #isSupported(ArchiveFormat)}），不需要解压的格式则按普通文件处理
-     * @param fileNameCharsetMap      归档格式文件名编码
+     * @param zaConfig                解压缩配置
+     * @param zipFileName             压缩包文件名
      * @param unzipTimes              压缩包的第几层。最开始的压缩包为第一层，压缩包里面的文件是第二层，压缩包里的压缩包再解压，则加一层。以此类推……
      * @param unzipLevel              解压层级。-1：无限解压，碰到压缩包就解压；0、1：只解压当前压缩包；&gt;1：解压次数
-     * @param gzipFileName            gzip包的包名
      * @param isCloseStream           是否关闭流
      * @param unzipFilter             内部压缩包的名称过滤 {@code BiPredicate<Integer, String>(压缩包的第几层, 文件名)}
      * @param otherFilter             除压缩包以外的文件名称过滤 {@code BiPredicate<Integer, String>(压缩包的第几层, 文件名)}
@@ -215,18 +121,18 @@ public class ZipAdvanced {
      * @throws Exception 处理过程可能抛异常
      */
     private static <T> List<T> gzipHandle(InputStream is,
-                                          List<ArchiveFormat> needUnZipFormats,
-                                          Map<ArchiveFormat, Charset> fileNameCharsetMap,
+                                          ZAConfig zaConfig,
+                                          ZipFileName zipFileName,
                                           int unzipTimes,
                                           int unzipLevel,
-                                          String gzipFileName,
                                           boolean isCloseStream,
                                           BiPredicate<Integer, String> unzipFilter,
                                           BiPredicate<Integer, String> otherFilter,
                                           BiPredicate<Integer, String> beforeAfterActionFilter,
                                           RT3<InputStream, Integer, String, T, Exception> beforeUnzipAction,
                                           RT3<InputStream, Integer, String, T, Exception> otherAction) throws Exception {
-        Charset gzipNameCharset = fileNameCharsetMap.get(GZIP);
+        GzipInputProperty gzipInputProperty = (GzipInputProperty) zaConfig.getInputProperty(GZIP);
+        Charset gzipNameCharset = Charset.forName(gzipInputProperty.getFileNameEncoding());
         ArrayList<T> ts = new ArrayList<>();
         GzipCompressorInputStream gcis = null;
         try {
@@ -235,14 +141,14 @@ public class ZipAdvanced {
             int newUnzipTimes = unzipTimes + 1;
             int newUnzipLevel = unzipLevel < 0 ? unzipLevel : unzipLevel - 1;
 
-            String fileNameInGzip = ZipUtils.fileNameInGzip(gcis, gzipFileName, gzipNameCharset);
-            String extension = FilenameUtils.getExtension(fileNameInGzip);
+            String fileNameInGzip = ZipKit.fileNameInGzip(gcis, zipFileName.getGzipName(), gzipNameCharset);
+            String extension = FileName.of(fileNameInGzip).ext;
 
             ArchiveFormat archiveFormat = ArchiveFormat.of(extension);
-            if (needUnZipFormats.contains(archiveFormat)) {
+            if (zaConfig.isSupportedFormat(archiveFormat)) {
                 InputStream entryIs = gcis;
                 if ((beforeAfterActionFilter == null || beforeAfterActionFilter.test(newUnzipTimes, fileNameInGzip)) && beforeUnzipAction != null) {
-                    entryIs = IOStreams.transferTo(entryIs);
+                    entryIs = IOs.toMultiBAIS(entryIs);
                     T t = beforeUnzipAction.$(entryIs, newUnzipTimes, fileNameInGzip);
                     ts.add(t);
                     ((MultiByteArrayInputStream) entryIs).reset();      // 重复利用 MultiByteArrayInputStream，后续还要使用
@@ -251,15 +157,15 @@ public class ZipAdvanced {
                 if (!(unzipLevel == 0 || unzipLevel == 1)) {
                     if (unzipFilter == null || unzipFilter.test(newUnzipTimes, fileNameInGzip)) {
                         List<T> tmpTs = archiveFormat == ZIP
-                                ? zipHandle(entryIs, needUnZipFormats, fileNameCharsetMap, newUnzipTimes, newUnzipLevel,
+                                ? zipHandle(entryIs, zaConfig, zipFileName, newUnzipTimes, newUnzipLevel,
                                 false, unzipFilter, otherFilter, beforeAfterActionFilter, beforeUnzipAction, otherAction)
-                                : gzipHandle(entryIs, needUnZipFormats, fileNameCharsetMap, newUnzipTimes, newUnzipLevel,
-                                fileNameInGzip, false, unzipFilter, otherFilter, beforeAfterActionFilter, beforeUnzipAction, otherAction);
+                                : gzipHandle(entryIs, zaConfig, zipFileName.setGzipName(fileNameInGzip), newUnzipTimes, newUnzipLevel,
+                                false, unzipFilter, otherFilter, beforeAfterActionFilter, beforeUnzipAction, otherAction);
                         ts.addAll(tmpTs);
                     }
                 }
             } else {
-                if (otherFilter == null || otherFilter.test(newUnzipTimes, fileNameInGzip)) {
+                if ((otherFilter == null || otherFilter.test(newUnzipTimes, fileNameInGzip)) && otherAction != null) {
                     ts.add(otherAction.$(gcis, newUnzipTimes, fileNameInGzip));
                 }
             }
@@ -278,7 +184,7 @@ public class ZipAdvanced {
      * <b>注：内部会自动关闭 InputStream 输入流</b>
      *
      * @param is                      输入流
-     * @param fileNameCharsetMap      归档格式文件名编码
+     * @param zipFileName             压缩包文件名
      * @param unzipLevel              解压层级。-1：无限解压，碰到压缩包就解压；0、1：只解压当前压缩包；&gt;1：解压次数
      * @param unzipFilter             内部压缩包的名称过滤 {@code BiPredicate<Integer, String>(压缩包的第几层, 文件名)}
      * @param otherFilter             除压缩包以外的文件名称过滤 {@code BiPredicate<Integer, String>(压缩包的第几层, 文件名)}
@@ -290,16 +196,14 @@ public class ZipAdvanced {
      * @throws Exception 处理过程可能抛异常
      */
     public static <T> List<T> zipHandle(InputStream is,
-                                        Map<ArchiveFormat, Charset> fileNameCharsetMap,
+                                        ZipFileName zipFileName,
                                         int unzipLevel,
                                         BiPredicate<Integer, String> unzipFilter,
                                         BiPredicate<Integer, String> otherFilter,
                                         BiPredicate<Integer, String> beforeAfterActionFilter,
                                         RT3<InputStream, Integer, String, T, Exception> beforeUnzipAction,
                                         RT3<InputStream, Integer, String, T, Exception> otherAction) throws Exception {
-        Tuple2<List<ArchiveFormat>, Map<ArchiveFormat, Charset>> formatsAndMap = checkParameters(null, fileNameCharsetMap);
-        return zipHandle(is, formatsAndMap._1, formatsAndMap._2, 1, unzipLevel, true,
-                unzipFilter, otherFilter, beforeAfterActionFilter, beforeUnzipAction, otherAction);
+        return zipHandle(is, null, zipFileName, unzipLevel, unzipFilter, otherFilter, beforeAfterActionFilter, beforeUnzipAction, otherAction);
     }
 
     /**
@@ -307,8 +211,8 @@ public class ZipAdvanced {
      * <b>注：内部会自动关闭 InputStream 输入流</b>
      *
      * @param is                      输入流
-     * @param needUnZipFormats        需要解压的归档格式（必须是支持的格式 {@link #isSupported(ArchiveFormat)}），不需要解压的格式则按普通文件处理
-     * @param fileNameCharsetMap      归档格式文件名编码
+     * @param zaConfig                解压缩配置
+     * @param zipFileName             压缩包文件名
      * @param unzipLevel              解压层级。-1：无限解压，碰到压缩包就解压；0、1：只解压当前压缩包；&gt;1：解压次数
      * @param unzipFilter             内部压缩包的名称过滤 {@code BiPredicate<Integer, String>(压缩包的第几层, 文件名)}
      * @param otherFilter             除压缩包以外的文件名称过滤 {@code BiPredicate<Integer, String>(压缩包的第几层, 文件名)}
@@ -320,17 +224,16 @@ public class ZipAdvanced {
      * @throws Exception 处理过程可能抛异常
      */
     public static <T> List<T> zipHandle(InputStream is,
-                                        ArchiveFormat[] needUnZipFormats,
-                                        Map<ArchiveFormat, Charset> fileNameCharsetMap,
+                                        ZAConfig zaConfig,
+                                        ZipFileName zipFileName,
                                         int unzipLevel,
                                         BiPredicate<Integer, String> unzipFilter,
                                         BiPredicate<Integer, String> otherFilter,
                                         BiPredicate<Integer, String> beforeAfterActionFilter,
                                         RT3<InputStream, Integer, String, T, Exception> beforeUnzipAction,
                                         RT3<InputStream, Integer, String, T, Exception> otherAction) throws Exception {
-        Tuple2<List<ArchiveFormat>, Map<ArchiveFormat, Charset>> formatsAndMap = checkParameters(needUnZipFormats, fileNameCharsetMap);
-        return zipHandle(is, formatsAndMap._1, formatsAndMap._2, 1, unzipLevel, true,
-                unzipFilter, otherFilter, beforeAfterActionFilter, beforeUnzipAction, otherAction);
+        return zipHandle(is, zaConfig == null ? ZAConfig.DEFAULT_ZACONFIG : zaConfig, zipFileName == null ? ZipFileName.of() : zipFileName.clone(),
+                1, unzipLevel, true, unzipFilter, otherFilter, beforeAfterActionFilter, beforeUnzipAction, otherAction);
     }
 
     /**
@@ -338,8 +241,8 @@ public class ZipAdvanced {
      * <b>注：内部会自动关闭 InputStream 输入流</b>
      *
      * @param is                      输入流
-     * @param needUnZipFormats        需要解压的归档格式（必须是支持的格式 {@link #isSupported(ArchiveFormat)}），不需要解压的格式则按普通文件处理
-     * @param fileNameCharsetMap      归档格式文件名编码
+     * @param zaConfig                解压缩配置
+     * @param zipFileName             压缩包文件名
      * @param unzipTimes              压缩包的第几层。最开始的压缩包为第一层，压缩包里面的文件是第二层，压缩包里的压缩包再解压，则加一层。以此类推……
      * @param unzipLevel              解压层级。-1：无限解压，碰到压缩包就解压；0、1：只解压当前压缩包；&gt;1：解压次数
      * @param isCloseStream           是否关闭流
@@ -353,8 +256,8 @@ public class ZipAdvanced {
      * @throws Exception 处理过程可能抛异常
      */
     private static <T> List<T> zipHandle(InputStream is,
-                                         List<ArchiveFormat> needUnZipFormats,
-                                         Map<ArchiveFormat, Charset> fileNameCharsetMap,
+                                         ZAConfig zaConfig,
+                                         ZipFileName zipFileName,
                                          int unzipTimes,
                                          int unzipLevel,
                                          boolean isCloseStream,
@@ -363,11 +266,11 @@ public class ZipAdvanced {
                                          BiPredicate<Integer, String> beforeAfterActionFilter,
                                          RT3<InputStream, Integer, String, T, Exception> beforeUnzipAction,
                                          RT3<InputStream, Integer, String, T, Exception> otherAction) throws Exception {
-        Charset zipEntryNameCharset = fileNameCharsetMap.get(ZIP);
+        ZipInputProperty zipInputProperty = (ZipInputProperty) zaConfig.getInputProperty(ZIP);
         ArrayList<T> ts = new ArrayList<>();
         ZipArchiveInputStream zipis = null;
         try {
-            zipis = new ZipArchiveInputStream(is, zipEntryNameCharset.name());
+            zipis = new ZipArchiveInputStream(is, zipInputProperty.getFileNameEncoding());
 
             int newUnzipTimes = unzipTimes + 1;
             int newUnzipLevel = unzipLevel < 0 ? unzipLevel : unzipLevel - 1;
@@ -376,13 +279,13 @@ public class ZipAdvanced {
             while ((entry = zipis.getNextEntry()) != null) {
                 String entryFileName = entry.getName();
                 if (entry.isDirectory()) continue;
-                String extension = FilenameUtils.getExtension(entryFileName);
+                String extension = FileName.of(entryFileName).ext;
 
                 ArchiveFormat archiveFormat = ArchiveFormat.of(extension);
-                if (needUnZipFormats.contains(archiveFormat)) {
+                if (zaConfig.isSupportedFormat(archiveFormat)) {
                     InputStream entryIs = zipis;
                     if ((beforeAfterActionFilter == null || beforeAfterActionFilter.test(newUnzipTimes, entryFileName)) && beforeUnzipAction != null) {
-                        entryIs = IOStreams.transferTo(entryIs);
+                        entryIs = IOs.toMultiBAIS(entryIs);
                         T t = beforeUnzipAction.$(entryIs, newUnzipTimes, entryFileName);
                         ts.add(t);
                         ((MultiByteArrayInputStream) entryIs).reset();      // 重复利用 MultiByteArrayInputStream，后续还要使用
@@ -391,15 +294,15 @@ public class ZipAdvanced {
                     if (!(unzipLevel == 0 || unzipLevel == 1)) {
                         if (unzipFilter == null || unzipFilter.test(newUnzipTimes, entryFileName)) {
                             List<T> tmpTs = archiveFormat == ZIP
-                                    ? zipHandle(entryIs, needUnZipFormats, fileNameCharsetMap, newUnzipTimes, newUnzipLevel, false,
+                                    ? zipHandle(entryIs, zaConfig, zipFileName, newUnzipTimes, newUnzipLevel, false,
                                     unzipFilter, otherFilter, beforeAfterActionFilter, beforeUnzipAction, otherAction)
-                                    : gzipHandle(entryIs, needUnZipFormats, fileNameCharsetMap, newUnzipTimes, newUnzipLevel, entryFileName,
+                                    : gzipHandle(entryIs, zaConfig, zipFileName.setGzipName(entryFileName), newUnzipTimes, newUnzipLevel,
                                     false, unzipFilter, otherFilter, beforeAfterActionFilter, beforeUnzipAction, otherAction);
                             ts.addAll(tmpTs);
                         }
                     }
                 } else {
-                    if (otherFilter == null || otherFilter.test(newUnzipTimes, entryFileName)) {
+                    if ((otherFilter == null || otherFilter.test(newUnzipTimes, entryFileName)) && otherAction != null) {
                         ts.add(otherAction.$(zipis, newUnzipTimes, entryFileName));
                     }
                 }
@@ -419,9 +322,8 @@ public class ZipAdvanced {
      * <b>注：内部会自动关闭 InputStream 输入流</b>
      *
      * @param is                      输入流
-     * @param fileNameCharsetMap      归档格式文件名编码
+     * @param zipFileName             压缩包文件名
      * @param unzipLevel              解压层级。-1：无限解压，碰到压缩包就解压；0、1：只解压当前压缩包；&gt;1：解压次数
-     * @param gzipFileName            gzip包的包名
      * @param unzipFilter             内部压缩包的名称过滤 {@code BiPredicate<Integer, String>(压缩包的第几层, 文件名)}
      * @param otherFilter             除压缩包以外的文件名称过滤 {@code BiPredicate<Integer, String>(压缩包的第几层, 文件名)}
      * @param beforeAfterActionFilter 压缩包解压缩前后的Action前的过滤 {@code BiPredicate<Integer, String>(压缩包的第几层, 文件名)}
@@ -434,18 +336,15 @@ public class ZipAdvanced {
      * @throws Exception 处理过程可能抛异常
      */
     public static <T> Tuple2<byte[][], List<T>> reGzipHandle(InputStream is,
-                                                             Map<ArchiveFormat, Charset> fileNameCharsetMap,
+                                                             ZipFileName zipFileName,
                                                              int unzipLevel,
-                                                             String gzipFileName,
                                                              BiPredicate<Integer, String> unzipFilter,
                                                              BiPredicate<Integer, String> otherFilter,
                                                              BiPredicate<Integer, String> beforeAfterActionFilter,
                                                              RT3<InputStream, Integer, String, T, Exception> beforeUnzipAction,
                                                              RT3<InputStream, Integer, String, T, Exception> afterZipAction,
                                                              RT4<InputStream, OutputStream, Integer, String, T, Exception> otherAction) throws Exception {
-        Tuple2<List<ArchiveFormat>, Map<ArchiveFormat, Charset>> formatsAndMap = checkParameters(null, fileNameCharsetMap);
-        return reGzipHandle(is, formatsAndMap._1, formatsAndMap._2, 1, unzipLevel, gzipFileName, true, unzipFilter, otherFilter,
-                beforeAfterActionFilter, beforeUnzipAction, afterZipAction, otherAction);
+        return reGzipHandle(is, null, zipFileName, unzipLevel, unzipFilter, otherFilter, beforeAfterActionFilter, beforeUnzipAction, afterZipAction, otherAction);
     }
 
     /**
@@ -453,10 +352,9 @@ public class ZipAdvanced {
      * <b>注：内部会自动关闭 InputStream 输入流</b>
      *
      * @param is                      输入流
-     * @param needUnZipFormats        需要解压的归档格式（必须是支持的格式 {@link #isSupported(ArchiveFormat)}），不需要解压的格式则按普通文件处理
-     * @param fileNameCharsetMap      归档格式文件名编码
+     * @param zaConfig                解压缩配置
+     * @param zipFileName             压缩包文件名
      * @param unzipLevel              解压层级。-1：无限解压，碰到压缩包就解压；0、1：只解压当前压缩包；&gt;1：解压次数
-     * @param gzipFileName            gzip包的包名
      * @param unzipFilter             内部压缩包的名称过滤 {@code BiPredicate<Integer, String>(压缩包的第几层, 文件名)}
      * @param otherFilter             除压缩包以外的文件名称过滤 {@code BiPredicate<Integer, String>(压缩包的第几层, 文件名)}
      * @param beforeAfterActionFilter 压缩包解压缩前后的Action前的过滤 {@code BiPredicate<Integer, String>(压缩包的第几层, 文件名)}
@@ -469,19 +367,17 @@ public class ZipAdvanced {
      * @throws Exception 处理过程可能抛异常
      */
     public static <T> Tuple2<byte[][], List<T>> reGzipHandle(InputStream is,
-                                                             ArchiveFormat[] needUnZipFormats,
-                                                             Map<ArchiveFormat, Charset> fileNameCharsetMap,
+                                                             ZAConfig zaConfig,
+                                                             ZipFileName zipFileName,
                                                              int unzipLevel,
-                                                             String gzipFileName,
                                                              BiPredicate<Integer, String> unzipFilter,
                                                              BiPredicate<Integer, String> otherFilter,
                                                              BiPredicate<Integer, String> beforeAfterActionFilter,
                                                              RT3<InputStream, Integer, String, T, Exception> beforeUnzipAction,
                                                              RT3<InputStream, Integer, String, T, Exception> afterZipAction,
                                                              RT4<InputStream, OutputStream, Integer, String, T, Exception> otherAction) throws Exception {
-        Tuple2<List<ArchiveFormat>, Map<ArchiveFormat, Charset>> formatsAndMap = checkParameters(needUnZipFormats, fileNameCharsetMap);
-        return reGzipHandle(is, formatsAndMap._1, formatsAndMap._2, 1, unzipLevel, gzipFileName, true, unzipFilter, otherFilter,
-                beforeAfterActionFilter, beforeUnzipAction, afterZipAction, otherAction);
+        return reGzipHandle(is, zaConfig == null ? ZAConfig.DEFAULT_ZACONFIG : zaConfig, zipFileName == null ? ZipFileName.of() : zipFileName.clone(),
+                1, unzipLevel, true, unzipFilter, otherFilter, beforeAfterActionFilter, beforeUnzipAction, afterZipAction, otherAction);
     }
 
     /**
@@ -489,11 +385,10 @@ public class ZipAdvanced {
      * <b>注：内部会自动关闭 InputStream 输入流</b>
      *
      * @param is                      输入流
-     * @param needUnZipFormats        需要解压的归档格式（必须是支持的格式 {@link #isSupported(ArchiveFormat)}），不需要解压的格式则按普通文件处理
-     * @param fileNameCharsetMap      归档格式文件名编码
+     * @param zaConfig                解压缩配置
+     * @param zipFileName             压缩包文件名
      * @param unzipTimes              压缩包的第几层。最开始的压缩包为第一层，压缩包里面的文件是第二层，压缩包里的压缩包再解压，则加一层。以此类推……
      * @param unzipLevel              解压层级。-1：无限解压，碰到压缩包就解压；0、1：只解压当前压缩包；&gt;1：解压次数
-     * @param gzipFileName            gzip包的包名
      * @param isCloseStream           是否关闭流
      * @param unzipFilter             内部压缩包的名称过滤 {@code BiPredicate<Integer, String>(压缩包的第几层, 文件名)}
      * @param otherFilter             除压缩包以外的文件名称过滤 {@code BiPredicate<Integer, String>(压缩包的第几层, 文件名)}
@@ -507,11 +402,10 @@ public class ZipAdvanced {
      * @throws Exception 处理过程可能抛异常
      */
     private static <T> Tuple2<byte[][], List<T>> reGzipHandle(InputStream is,
-                                                              List<ArchiveFormat> needUnZipFormats,
-                                                              Map<ArchiveFormat, Charset> fileNameCharsetMap,
+                                                              ZAConfig zaConfig,
+                                                              ZipFileName zipFileName,
                                                               int unzipTimes,
                                                               int unzipLevel,
-                                                              String gzipFileName,
                                                               boolean isCloseStream,
                                                               BiPredicate<Integer, String> unzipFilter,
                                                               BiPredicate<Integer, String> otherFilter,
@@ -519,25 +413,29 @@ public class ZipAdvanced {
                                                               RT3<InputStream, Integer, String, T, Exception> beforeUnzipAction,
                                                               RT3<InputStream, Integer, String, T, Exception> afterZipAction,
                                                               RT4<InputStream, OutputStream, Integer, String, T, Exception> otherAction) throws Exception {
-        Charset gzipNameCharset = fileNameCharsetMap.get(GZIP);
+        GzipInputProperty gzipInputProperty = (GzipInputProperty) zaConfig.getInputProperty(GZIP);
+        GzipOutputProperty gzipOutputProperty = (GzipOutputProperty) zaConfig.getOutputProperty(GZIP);
+        Charset inputGzipNameCharset = Charset.forName(gzipInputProperty.getFileNameEncoding());
+        Charset outputGzipNameCharset = Charset.forName(gzipOutputProperty.getFileNameEncoding());
+
         ArrayList<T> ts = new ArrayList<>();
         GzipCompressorInputStream gcis = null;
         byte[][] gzipBytes;
         try {
             gcis = new GzipCompressorInputStream(is);
-            String fileNameInGzip = ZipUtils.fileNameInGzip(gcis, gzipFileName, gzipNameCharset);
-            String extension = FilenameUtils.getExtension(fileNameInGzip);
+            String fileNameInGzip = ZipKit.fileNameInGzip(gcis, zipFileName.getGzipName(), inputGzipNameCharset);
+            String extension = FileName.of(fileNameInGzip).ext;
             MultiByteArrayOutputStream baos = new MultiByteArrayOutputStream();
 
             int newUnzipTimes = unzipTimes + 1;
             int newUnzipLevel = unzipLevel < 0 ? unzipLevel : unzipLevel - 1;
 
             ArchiveFormat archiveFormat = ArchiveFormat.of(extension);
-            if (needUnZipFormats.contains(archiveFormat)) {
+            if (zaConfig.isSupportedFormat(archiveFormat)) {
                 InputStream entryIs = gcis;
                 boolean isRunBeforeAfterAction = beforeAfterActionFilter == null || beforeAfterActionFilter.test(newUnzipTimes, fileNameInGzip);
                 if (isRunBeforeAfterAction && (beforeUnzipAction != null || afterZipAction != null)) {
-                    entryIs = IOStreams.transferTo(entryIs);
+                    entryIs = IOs.toMultiBAIS(entryIs);
                     if (beforeUnzipAction != null) {
                         T t = beforeUnzipAction.$(entryIs, newUnzipTimes, fileNameInGzip);
                         ts.add(t);
@@ -548,16 +446,16 @@ public class ZipAdvanced {
                 if (!(unzipLevel == 0 || unzipLevel == 1)) {
                     if (unzipFilter == null || unzipFilter.test(newUnzipTimes, fileNameInGzip)) {
                         Tuple2<byte[][], List<T>> listTuple2 = archiveFormat == ZIP
-                                ? reZipHandle(entryIs, needUnZipFormats, fileNameCharsetMap, newUnzipTimes, newUnzipLevel, false, unzipFilter,
+                                ? reZipHandle(entryIs, zaConfig, zipFileName, newUnzipTimes, newUnzipLevel, false, unzipFilter,
                                 otherFilter, beforeAfterActionFilter, beforeUnzipAction, afterZipAction, otherAction)
-                                : reGzipHandle(entryIs, needUnZipFormats, fileNameCharsetMap, newUnzipTimes, newUnzipLevel, fileNameInGzip, false,
+                                : reGzipHandle(entryIs, zaConfig, zipFileName.setGzipName(fileNameInGzip), newUnzipTimes, newUnzipLevel, false,
                                 unzipFilter, otherFilter, beforeAfterActionFilter, beforeUnzipAction, afterZipAction, otherAction);
                         ts.addAll(listTuple2._2);
                         entryIs = new MultiByteArrayInputStream(listTuple2._1);
                     }
                 }
 
-                gzipBytes = ZipUtils.gzip(entryIs, fileNameInGzip, gzipNameCharset);
+                gzipBytes = ZipKit.gzip(entryIs, fileNameInGzip, outputGzipNameCharset);
 
                 if (isRunBeforeAfterAction && afterZipAction != null) {
                     ((MultiByteArrayInputStream) entryIs).reset();
@@ -566,11 +464,11 @@ public class ZipAdvanced {
                 }
 
             } else {
-                if (otherFilter == null || otherFilter.test(newUnzipTimes, fileNameInGzip)) {
+                if ((otherFilter == null || otherFilter.test(newUnzipTimes, fileNameInGzip)) && otherAction != null) {
                     ts.add(otherAction.$(gcis, baos, newUnzipTimes, fileNameInGzip));
-                    gzipBytes = ZipUtils.gzip(new MultiByteArrayInputStream(baos.toByteArrays()), fileNameInGzip, gzipNameCharset);
+                    gzipBytes = ZipKit.gzip(new MultiByteArrayInputStream(baos.toByteArrays()), fileNameInGzip, outputGzipNameCharset);
                 } else {
-                    gzipBytes = ZipUtils.gzip(gcis, fileNameInGzip, gzipNameCharset);
+                    gzipBytes = ZipKit.gzip(gcis, fileNameInGzip, outputGzipNameCharset);
                 }
             }
 
@@ -588,7 +486,7 @@ public class ZipAdvanced {
      * <b>注：内部会自动关闭 InputStream 输入流</b>
      *
      * @param is                      输入流
-     * @param fileNameCharsetMap      归档格式文件名编码
+     * @param zipFileName             压缩包文件名
      * @param unzipLevel              解压层级。-1：无限解压，碰到压缩包就解压；0、1：只解压当前压缩包；&gt;1：解压次数
      * @param unzipFilter             内部压缩包的名称过滤 {@code BiPredicate<Integer, String>(压缩包的第几层, 文件名)}
      * @param otherFilter             除压缩包以外的文件名称过滤 {@code BiPredicate<Integer, String>(压缩包的第几层, 文件名)}
@@ -602,7 +500,7 @@ public class ZipAdvanced {
      * @throws Exception 处理过程可能抛异常
      */
     public static <T> Tuple2<byte[][], List<T>> reZipHandle(InputStream is,
-                                                            Map<ArchiveFormat, Charset> fileNameCharsetMap,
+                                                            ZipFileName zipFileName,
                                                             int unzipLevel,
                                                             BiPredicate<Integer, String> unzipFilter,
                                                             BiPredicate<Integer, String> otherFilter,
@@ -610,9 +508,7 @@ public class ZipAdvanced {
                                                             RT3<InputStream, Integer, String, T, Exception> beforeUnzipAction,
                                                             RT3<InputStream, Integer, String, T, Exception> afterZipAction,
                                                             RT4<InputStream, OutputStream, Integer, String, T, Exception> otherAction) throws Exception {
-        Tuple2<List<ArchiveFormat>, Map<ArchiveFormat, Charset>> formatsAndMap = checkParameters(null, fileNameCharsetMap);
-        return reZipHandle(is, formatsAndMap._1, formatsAndMap._2, 1, unzipLevel, true, unzipFilter, otherFilter,
-                beforeAfterActionFilter, beforeUnzipAction, afterZipAction, otherAction);
+        return reZipHandle(is, null, zipFileName, unzipLevel, unzipFilter, otherFilter, beforeAfterActionFilter, beforeUnzipAction, afterZipAction, otherAction);
     }
 
     /**
@@ -620,8 +516,8 @@ public class ZipAdvanced {
      * <b>注：内部会自动关闭 InputStream 输入流</b>
      *
      * @param is                      输入流
-     * @param needUnZipFormats        需要解压的归档格式（必须是支持的格式 {@link #isSupported(ArchiveFormat)}），不需要解压的格式则按普通文件处理
-     * @param fileNameCharsetMap      归档格式文件名编码
+     * @param zaConfig                解压缩配置
+     * @param zipFileName             压缩包文件名
      * @param unzipLevel              解压层级。-1：无限解压，碰到压缩包就解压；0、1：只解压当前压缩包；&gt;1：解压次数
      * @param unzipFilter             内部压缩包的名称过滤 {@code BiPredicate<Integer, String>(压缩包的第几层, 文件名)}
      * @param otherFilter             除压缩包以外的文件名称过滤 {@code BiPredicate<Integer, String>(压缩包的第几层, 文件名)}
@@ -635,8 +531,8 @@ public class ZipAdvanced {
      * @throws Exception 处理过程可能抛异常
      */
     public static <T> Tuple2<byte[][], List<T>> reZipHandle(InputStream is,
-                                                            ArchiveFormat[] needUnZipFormats,
-                                                            Map<ArchiveFormat, Charset> fileNameCharsetMap,
+                                                            ZAConfig zaConfig,
+                                                            ZipFileName zipFileName,
                                                             int unzipLevel,
                                                             BiPredicate<Integer, String> unzipFilter,
                                                             BiPredicate<Integer, String> otherFilter,
@@ -644,9 +540,8 @@ public class ZipAdvanced {
                                                             RT3<InputStream, Integer, String, T, Exception> beforeUnzipAction,
                                                             RT3<InputStream, Integer, String, T, Exception> afterZipAction,
                                                             RT4<InputStream, OutputStream, Integer, String, T, Exception> otherAction) throws Exception {
-        Tuple2<List<ArchiveFormat>, Map<ArchiveFormat, Charset>> formatsAndMap = checkParameters(needUnZipFormats, fileNameCharsetMap);
-        return reZipHandle(is, formatsAndMap._1, formatsAndMap._2, 1, unzipLevel, true, unzipFilter, otherFilter,
-                beforeAfterActionFilter, beforeUnzipAction, afterZipAction, otherAction);
+        return reZipHandle(is, zaConfig == null ? ZAConfig.DEFAULT_ZACONFIG : zaConfig, zipFileName == null ? ZipFileName.of() : zipFileName.clone(),
+                1, unzipLevel, true, unzipFilter, otherFilter, beforeAfterActionFilter, beforeUnzipAction, afterZipAction, otherAction);
     }
 
     /**
@@ -654,8 +549,8 @@ public class ZipAdvanced {
      * <b>注：内部会自动关闭 InputStream 输入流</b>
      *
      * @param is                      输入流
-     * @param needUnZipFormats        需要解压的归档格式（必须是支持的格式 {@link #isSupported(ArchiveFormat)}），不需要解压的格式则按普通文件处理
-     * @param fileNameCharsetMap      归档格式文件名编码
+     * @param zaConfig                解压缩配置
+     * @param zipFileName             压缩包文件名
      * @param unzipTimes              压缩包的第几层。最开始的压缩包为第一层，压缩包里面的文件是第二层，压缩包里的压缩包再解压，则加一层。以此类推……
      * @param unzipLevel              解压层级。-1：无限解压，碰到压缩包就解压；0、1：只解压当前压缩包；&gt;1：解压次数
      * @param isCloseStream           是否关闭流
@@ -671,8 +566,8 @@ public class ZipAdvanced {
      * @throws Exception 处理过程可能抛异常
      */
     private static <T> Tuple2<byte[][], List<T>> reZipHandle(InputStream is,
-                                                             List<ArchiveFormat> needUnZipFormats,
-                                                             Map<ArchiveFormat, Charset> fileNameCharsetMap,
+                                                             ZAConfig zaConfig,
+                                                             ZipFileName zipFileName,
                                                              int unzipTimes,
                                                              int unzipLevel,
                                                              boolean isCloseStream,
@@ -682,14 +577,20 @@ public class ZipAdvanced {
                                                              RT3<InputStream, Integer, String, T, Exception> beforeUnzipAction,
                                                              RT3<InputStream, Integer, String, T, Exception> afterZipAction,
                                                              RT4<InputStream, OutputStream, Integer, String, T, Exception> otherAction) throws Exception {
-        Charset zipEntryNameCharset = fileNameCharsetMap.get(ZIP);
+        ZipInputProperty zipInputProperty = (ZipInputProperty) zaConfig.getInputProperty(ZIP);
+        ZipOutputProperty zipOutputProperty = (ZipOutputProperty) zaConfig.getOutputProperty(ZIP);
+
         ArrayList<T> ts = new ArrayList<>();
         ZipArchiveInputStream zipis = null;
         MultiByteArrayOutputStream baos = new MultiByteArrayOutputStream();
         ZipArchiveOutputStream zos = null;
         try {
-            zipis = new ZipArchiveInputStream(is, zipEntryNameCharset.name());
+            zipis = new ZipArchiveInputStream(is, zipInputProperty.getFileNameEncoding());
             zos = new ZipArchiveOutputStream(baos);
+            zos.setLevel(zipOutputProperty.getLevel());
+            zos.setMethod(zipOutputProperty.getMethod());
+            zos.setUseZip64(zipOutputProperty.getZip64Mode());
+            zos.setEncoding(zipOutputProperty.getFileNameEncoding());
 
             int newUnzipTimes = unzipTimes + 1;
             int newUnzipLevel = unzipLevel < 0 ? unzipLevel : unzipLevel - 1;
@@ -702,61 +603,66 @@ public class ZipAdvanced {
                     zos.closeArchiveEntry();
                     continue;
                 }
-                String extension = FilenameUtils.getExtension(entryFileName);
 
-                MultiByteArrayOutputStream tmpBaos = new MultiByteArrayOutputStream();
+                try {
+                    String extension = FileName.of(entryFileName).ext;
 
-                byte[][] byteArrays;
+                    MultiByteArrayOutputStream tmpBaos = new MultiByteArrayOutputStream();
 
-                ArchiveFormat archiveFormat = ArchiveFormat.of(extension);
-                if (needUnZipFormats.contains(archiveFormat)) {
+                    byte[][] byteArrays;
 
-                    InputStream entryIs = zipis;
+                    ArchiveFormat archiveFormat = ArchiveFormat.of(extension);
+                    if (zaConfig.isSupportedFormat(archiveFormat)) {
 
-                    boolean isRunBeforeAfterAction = beforeAfterActionFilter == null || beforeAfterActionFilter.test(newUnzipTimes, entryFileName);
-                    if (isRunBeforeAfterAction && beforeUnzipAction != null) {
-                        entryIs = IOStreams.transferTo(entryIs);
-                        T t = beforeUnzipAction.$(entryIs, newUnzipTimes, entryFileName);
-                        ts.add(t);
-                        ((MultiByteArrayInputStream) entryIs).reset();      // 重复利用 MultiByteArrayInputStream，后续还要使用
-                    }
+                        InputStream entryIs = zipis;
 
-                    if (unzipLevel == 0 || unzipLevel == 1) {
-                        IOUtils.copy(entryIs, tmpBaos);
-                        byteArrays = tmpBaos.toByteArrays();
-                    } else {
-                        if (unzipFilter == null || unzipFilter.test(newUnzipTimes, entryFileName)) {
-                            Tuple2<byte[][], List<T>> listTuple2 = archiveFormat == ZIP
-                                    ? reZipHandle(entryIs, needUnZipFormats, fileNameCharsetMap, newUnzipTimes, newUnzipLevel, false, unzipFilter,
-                                    otherFilter, beforeAfterActionFilter, beforeUnzipAction, afterZipAction, otherAction)
-                                    : reGzipHandle(entryIs, needUnZipFormats, fileNameCharsetMap, newUnzipTimes, newUnzipLevel, entryFileName,
-                                    false, unzipFilter, otherFilter, beforeAfterActionFilter, beforeUnzipAction, afterZipAction, otherAction);
-
-                            ts.addAll(listTuple2._2);
-                            byteArrays = listTuple2._1;
-                        } else {
-                            IOUtils.copy(entryIs, tmpBaos);
-                            byteArrays = tmpBaos.toByteArrays();
+                        boolean isRunBeforeAfterAction = beforeAfterActionFilter == null || beforeAfterActionFilter.test(newUnzipTimes, entryFileName);
+                        if (isRunBeforeAfterAction && beforeUnzipAction != null) {
+                            entryIs = IOs.toMultiBAIS(entryIs);
+                            T t = beforeUnzipAction.$(entryIs, newUnzipTimes, entryFileName);
+                            ts.add(t);
+                            ((MultiByteArrayInputStream) entryIs).reset();      // 重复利用 MultiByteArrayInputStream，后续还要使用
                         }
-                    }
 
-                    if (isRunBeforeAfterAction && afterZipAction != null) {
-                        T t = afterZipAction.$(new MultiByteArrayInputStream(byteArrays), newUnzipTimes, entryFileName);
-                        ts.add(t);
-                    }
-                } else {
-                    if (otherFilter == null || otherFilter.test(newUnzipTimes, entryFileName)) {
-                        ts.add(otherAction.$(zipis, tmpBaos, newUnzipTimes, entryFileName));
+                        if (unzipLevel == 0 || unzipLevel == 1) {
+                            IOs.copy(entryIs, tmpBaos);
+                            byteArrays = tmpBaos.toByteArrays();
+                        } else {
+                            if (unzipFilter == null || unzipFilter.test(newUnzipTimes, entryFileName)) {
+                                Tuple2<byte[][], List<T>> listTuple2 = archiveFormat == ZIP
+                                        ? reZipHandle(entryIs, zaConfig, zipFileName, newUnzipTimes, newUnzipLevel, false, unzipFilter,
+                                        otherFilter, beforeAfterActionFilter, beforeUnzipAction, afterZipAction, otherAction)
+                                        : reGzipHandle(entryIs, zaConfig, zipFileName.setGzipName(entryFileName), newUnzipTimes, newUnzipLevel,
+                                        false, unzipFilter, otherFilter, beforeAfterActionFilter, beforeUnzipAction, afterZipAction, otherAction);
+
+                                ts.addAll(listTuple2._2);
+                                byteArrays = listTuple2._1;
+                            } else {
+                                IOs.copy(entryIs, tmpBaos);
+                                byteArrays = tmpBaos.toByteArrays();
+                            }
+                        }
+
+                        if (isRunBeforeAfterAction && afterZipAction != null) {
+                            T t = afterZipAction.$(new MultiByteArrayInputStream(byteArrays), newUnzipTimes, entryFileName);
+                            ts.add(t);
+                        }
                     } else {
-                        IOUtils.copy(zipis, tmpBaos);
+                        if ((otherFilter == null || otherFilter.test(newUnzipTimes, entryFileName)) && otherAction != null) {
+                            ts.add(otherAction.$(zipis, tmpBaos, newUnzipTimes, entryFileName));
+                        } else {
+                            IOs.copy(zipis, tmpBaos);
+                        }
+                        byteArrays = tmpBaos.toByteArrays();
                     }
-                    byteArrays = tmpBaos.toByteArrays();
-                }
 
-                for (byte[] bytes : byteArrays) {
-                    zos.write(bytes);
+                    for (byte[] bytes : byteArrays) {
+                        zos.write(bytes);
+                    }
+
+                } finally {
+                    zos.closeArchiveEntry();
                 }
-                zos.closeArchiveEntry();
             }
         } finally {
             if (isCloseStream) {

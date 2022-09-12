@@ -26,7 +26,20 @@ import static com.iofairy.rainforest.zip.ArchiveType.*;
  * @since 0.0.1
  */
 public enum ArchiveFormat {
+    /*
+     * ARCHIVING_ONLY
+     */
+    A(EnumSet.of(ARCHIVING_ONLY), ".a", "Unix Archiver"),
+    AR(EnumSet.of(ARCHIVING_ONLY), ".ar", "Unix Archiver"),
+    CPIO(EnumSet.of(ARCHIVING_ONLY), ".cpio", "cpio"),
+    SHAR(EnumSet.of(ARCHIVING_ONLY), ".shar", "Shell archive"),
+    LBR(EnumSet.of(ARCHIVING_ONLY), ".LBR", ".LBR"),
+    MAR(EnumSet.of(ARCHIVING_ONLY), ".mar", "Mozilla ARchive"),
+    SBX(EnumSet.of(ARCHIVING_ONLY), ".sbx", "SeqBox"),
     TAR(EnumSet.of(ARCHIVING_ONLY), ".tar", "Tape archive"),
+    /*
+     * COMPRESSION_ONLY
+     */
     BROTLI(EnumSet.of(COMPRESSION_ONLY), ".br", "Brotli"),
     BZIP2(EnumSet.of(COMPRESSION_ONLY), ".bz2", "bzip2"),
     GZIP(EnumSet.of(COMPRESSION_ONLY), ".gz", "gzip"),
@@ -34,12 +47,19 @@ public enum ArchiveFormat {
     LZ4(EnumSet.of(COMPRESSION_ONLY), ".lz4", "LZ4"),
     LZMA(EnumSet.of(COMPRESSION_ONLY), ".lzma", "lzma"),
     LZOP(EnumSet.of(COMPRESSION_ONLY), ".lzo", "lzop"),
+    RZIP(EnumSet.of(COMPRESSION_ONLY), ".rz", "rzip"),
     SNAPPY(EnumSet.of(COMPRESSION_ONLY), ".sz", "Snappy"),
     XZ(EnumSet.of(COMPRESSION_ONLY), ".xz", "xz"),
     Z_PACK(EnumSet.of(COMPRESSION_ONLY), ".z", "pack"),
     Z_COMPRESS(EnumSet.of(COMPRESSION_ONLY), ".Z", "compress"),
     ZSTD(EnumSet.of(COMPRESSION_ONLY), ".zst", "Zstandard"),
+    /*
+     * MULTI_FUNCTION
+     */
     SEVEN_ZIP(EnumSet.of(MULTI_FUNCTION), ".7z", "7z"),
+    S7Z(EnumSet.of(MULTI_FUNCTION), ".s7z", "7zX"),
+    ACE(EnumSet.of(MULTI_FUNCTION), ".ace", "ACE"),
+    ARJ(EnumSet.of(MULTI_FUNCTION), ".arj", "ARJ"),
     RAR(EnumSet.of(MULTI_FUNCTION), ".rar", "RAR"),
     TAR_GZ(EnumSet.of(MULTI_FUNCTION), ".tar.gz", "tar with gzip"),
     TAR_Z(EnumSet.of(MULTI_FUNCTION), ".tar.Z", "tar with compress"),
@@ -52,6 +72,9 @@ public enum ArchiveFormat {
     TAR_ZST(EnumSet.of(MULTI_FUNCTION), ".tar.zst", "tar with zstd"),
     ZIP(EnumSet.of(MULTI_FUNCTION), ".zip", "ZIP"),
     ZZIP(EnumSet.of(MULTI_FUNCTION), ".zz", "Zzip"),
+    /*
+     * SOFTWARE_PACKAGING and MULTI_FUNCTION
+     */
     DEB(EnumSet.of(SOFTWARE_PACKAGING, MULTI_FUNCTION), ".deb", "Debian package (deb)"),
     PKG(EnumSet.of(SOFTWARE_PACKAGING, MULTI_FUNCTION), ".pkg", "Macintosh Installer"),
     MPKG(EnumSet.of(SOFTWARE_PACKAGING, MULTI_FUNCTION), ".mpkg", "Macintosh Installer"),
@@ -62,6 +85,9 @@ public enum ArchiveFormat {
     WAR(EnumSet.of(SOFTWARE_PACKAGING, MULTI_FUNCTION), ".war", "Web Application archive (Java-based web app)"),
     APK(EnumSet.of(SOFTWARE_PACKAGING, MULTI_FUNCTION), ".apk", "Android application package"),
     CRX(EnumSet.of(SOFTWARE_PACKAGING, MULTI_FUNCTION), ".crx", "Google Chrome extension package"),
+    /*
+     * DISK_IMAGE
+     */
     DMG(EnumSet.of(DISK_IMAGE, MULTI_FUNCTION), ".dmg", "Apple Disk Image"),
     ISO(EnumSet.of(DISK_IMAGE, ARCHIVING_ONLY), ".iso", "ISO-9660 image");
 
