@@ -15,6 +15,7 @@
  */
 package com.iofairy.rainforest.zip;
 
+import com.iofairy.falcon.zip.ArchiveType;
 
 /**
  * 压缩包的文件名，针对归档类型为 {@link ArchiveType#COMPRESSION_ONLY}

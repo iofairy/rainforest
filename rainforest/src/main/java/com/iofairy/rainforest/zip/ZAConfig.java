@@ -15,12 +15,13 @@
  */
 package com.iofairy.rainforest.zip;
 
+import com.iofairy.falcon.zip.ArchiveFormat;
 import com.iofairy.rainforest.zip.attr.*;
 import com.iofairy.top.G;
 
 import java.util.*;
 
-import static com.iofairy.rainforest.zip.ArchiveFormat.*;
+import static com.iofairy.falcon.zip.ArchiveFormat.*;
 
 /**
  * 解压缩高级类 {@link ZipAdvanced} 的配置

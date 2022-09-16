@@ -1,13 +1,13 @@
 package com.iofairy.test;
 
-import com.iofairy.rainforest.zip.ArchiveFormat;
+import com.iofairy.falcon.zip.ArchiveFormat;
 import com.iofairy.rainforest.zip.ZAConfig;
 import com.iofairy.rainforest.zip.attr.GzipInputProperty;
 import com.iofairy.rainforest.zip.attr.ZipOutputProperty;
 import org.junit.jupiter.api.Test;
 
-import static com.iofairy.rainforest.zip.ArchiveFormat.*;
-import static org.junit.jupiter.api.Assertions.*;
+import static com.iofairy.falcon.zip.ArchiveFormat.*;
+
 /**
  * @author GG
  * @version 1.0

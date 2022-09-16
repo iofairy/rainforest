@@ -17,6 +17,7 @@ package com.iofairy.rainforest.zip;
 
 import com.iofairy.falcon.fs.FileName;
 import com.iofairy.falcon.io.*;
+import com.iofairy.falcon.zip.ArchiveFormat;
 import com.iofairy.lambda.RT3;
 import com.iofairy.lambda.RT4;
 import com.iofairy.rainforest.zip.attr.*;
@@ -35,7 +36,7 @@ import java.nio.charset.Charset;
 import java.util.*;
 import java.util.function.BiPredicate;
 
-import static com.iofairy.rainforest.zip.ArchiveFormat.*;
+import static com.iofairy.falcon.zip.ArchiveFormat.*;
 
 /**
  * 解压缩高级方法
@@ -108,7 +109,7 @@ public class ZipAdvanced {
      * @param is                      输入流
      * @param zaConfig                解压缩配置
      * @param zipFileName             压缩包文件名
-     * @param unzipTimes              压缩包的第几层。最开始的压缩包为第一层，压缩包里面的文件是第二层，压缩包里的压缩包再解压，则加一层。以此类推……
+     * @param unzipTimes              压缩包的第几层。最开始的压缩包解压后，里面的文件为第一层，压缩包里的压缩包再解压，则加一层。以此类推……
      * @param unzipLevel              解压层级。-1：无限解压，碰到压缩包就解压；0、1：只解压当前压缩包；&gt;1：解压次数
      * @param isCloseStream           是否关闭流
      * @param unzipFilter             内部压缩包的名称过滤 {@code BiPredicate<Integer, String>(压缩包的第几层, 文件名)}
@@ -147,15 +148,15 @@ public class ZipAdvanced {
             ArchiveFormat archiveFormat = ArchiveFormat.of(extension);
             if (zaConfig.isSupportedFormat(archiveFormat)) {
                 InputStream entryIs = gcis;
-                if ((beforeAfterActionFilter == null || beforeAfterActionFilter.test(newUnzipTimes, fileNameInGzip)) && beforeUnzipAction != null) {
+                if ((beforeAfterActionFilter == null || beforeAfterActionFilter.test(unzipTimes, fileNameInGzip)) && beforeUnzipAction != null) {
                     entryIs = IOs.toMultiBAIS(entryIs);
-                    T t = beforeUnzipAction.$(entryIs, newUnzipTimes, fileNameInGzip);
+                    T t = beforeUnzipAction.$(entryIs, unzipTimes, fileNameInGzip);
                     ts.add(t);
                     ((MultiByteArrayInputStream) entryIs).reset();      // 重复利用 MultiByteArrayInputStream，后续还要使用
                 }
 
                 if (!(unzipLevel == 0 || unzipLevel == 1)) {
-                    if (unzipFilter == null || unzipFilter.test(newUnzipTimes, fileNameInGzip)) {
+                    if (unzipFilter == null || unzipFilter.test(unzipTimes, fileNameInGzip)) {
                         List<T> tmpTs = archiveFormat == ZIP
                                 ? zipHandle(entryIs, zaConfig, zipFileName, newUnzipTimes, newUnzipLevel,
                                 false, unzipFilter, otherFilter, beforeAfterActionFilter, beforeUnzipAction, otherAction)
@@ -165,8 +166,8 @@ public class ZipAdvanced {
                     }
                 }
             } else {
-                if ((otherFilter == null || otherFilter.test(newUnzipTimes, fileNameInGzip)) && otherAction != null) {
-                    ts.add(otherAction.$(gcis, newUnzipTimes, fileNameInGzip));
+                if ((otherFilter == null || otherFilter.test(unzipTimes, fileNameInGzip)) && otherAction != null) {
+                    ts.add(otherAction.$(gcis, unzipTimes, fileNameInGzip));
                 }
             }
 
@@ -243,7 +244,7 @@ public class ZipAdvanced {
      * @param is                      输入流
      * @param zaConfig                解压缩配置
      * @param zipFileName             压缩包文件名
-     * @param unzipTimes              压缩包的第几层。最开始的压缩包为第一层，压缩包里面的文件是第二层，压缩包里的压缩包再解压，则加一层。以此类推……
+     * @param unzipTimes              压缩包的第几层。最开始的压缩包解压后，里面的文件为第一层，压缩包里的压缩包再解压，则加一层。以此类推……
      * @param unzipLevel              解压层级。-1：无限解压，碰到压缩包就解压；0、1：只解压当前压缩包；&gt;1：解压次数
      * @param isCloseStream           是否关闭流
      * @param unzipFilter             内部压缩包的名称过滤 {@code BiPredicate<Integer, String>(压缩包的第几层, 文件名)}
@@ -284,15 +285,15 @@ public class ZipAdvanced {
                 ArchiveFormat archiveFormat = ArchiveFormat.of(extension);
                 if (zaConfig.isSupportedFormat(archiveFormat)) {
                     InputStream entryIs = zipis;
-                    if ((beforeAfterActionFilter == null || beforeAfterActionFilter.test(newUnzipTimes, entryFileName)) && beforeUnzipAction != null) {
+                    if ((beforeAfterActionFilter == null || beforeAfterActionFilter.test(unzipTimes, entryFileName)) && beforeUnzipAction != null) {
                         entryIs = IOs.toMultiBAIS(entryIs);
-                        T t = beforeUnzipAction.$(entryIs, newUnzipTimes, entryFileName);
+                        T t = beforeUnzipAction.$(entryIs, unzipTimes, entryFileName);
                         ts.add(t);
                         ((MultiByteArrayInputStream) entryIs).reset();      // 重复利用 MultiByteArrayInputStream，后续还要使用
                     }
 
                     if (!(unzipLevel == 0 || unzipLevel == 1)) {
-                        if (unzipFilter == null || unzipFilter.test(newUnzipTimes, entryFileName)) {
+                        if (unzipFilter == null || unzipFilter.test(unzipTimes, entryFileName)) {
                             List<T> tmpTs = archiveFormat == ZIP
                                     ? zipHandle(entryIs, zaConfig, zipFileName, newUnzipTimes, newUnzipLevel, false,
                                     unzipFilter, otherFilter, beforeAfterActionFilter, beforeUnzipAction, otherAction)
@@ -302,8 +303,8 @@ public class ZipAdvanced {
                         }
                     }
                 } else {
-                    if ((otherFilter == null || otherFilter.test(newUnzipTimes, entryFileName)) && otherAction != null) {
-                        ts.add(otherAction.$(zipis, newUnzipTimes, entryFileName));
+                    if ((otherFilter == null || otherFilter.test(unzipTimes, entryFileName)) && otherAction != null) {
+                        ts.add(otherAction.$(zipis, unzipTimes, entryFileName));
                     }
                 }
             }
@@ -387,7 +388,7 @@ public class ZipAdvanced {
      * @param is                      输入流
      * @param zaConfig                解压缩配置
      * @param zipFileName             压缩包文件名
-     * @param unzipTimes              压缩包的第几层。最开始的压缩包为第一层，压缩包里面的文件是第二层，压缩包里的压缩包再解压，则加一层。以此类推……
+     * @param unzipTimes              压缩包的第几层。最开始的压缩包解压后，里面的文件为第一层，压缩包里的压缩包再解压，则加一层。以此类推……
      * @param unzipLevel              解压层级。-1：无限解压，碰到压缩包就解压；0、1：只解压当前压缩包；&gt;1：解压次数
      * @param isCloseStream           是否关闭流
      * @param unzipFilter             内部压缩包的名称过滤 {@code BiPredicate<Integer, String>(压缩包的第几层, 文件名)}
@@ -433,18 +434,18 @@ public class ZipAdvanced {
             ArchiveFormat archiveFormat = ArchiveFormat.of(extension);
             if (zaConfig.isSupportedFormat(archiveFormat)) {
                 InputStream entryIs = gcis;
-                boolean isRunBeforeAfterAction = beforeAfterActionFilter == null || beforeAfterActionFilter.test(newUnzipTimes, fileNameInGzip);
+                boolean isRunBeforeAfterAction = beforeAfterActionFilter == null || beforeAfterActionFilter.test(unzipTimes, fileNameInGzip);
                 if (isRunBeforeAfterAction && (beforeUnzipAction != null || afterZipAction != null)) {
                     entryIs = IOs.toMultiBAIS(entryIs);
                     if (beforeUnzipAction != null) {
-                        T t = beforeUnzipAction.$(entryIs, newUnzipTimes, fileNameInGzip);
+                        T t = beforeUnzipAction.$(entryIs, unzipTimes, fileNameInGzip);
                         ts.add(t);
                         ((MultiByteArrayInputStream) entryIs).reset();      // 重复利用 MultiByteArrayInputStream，后续还要使用
                     }
                 }
 
                 if (!(unzipLevel == 0 || unzipLevel == 1)) {
-                    if (unzipFilter == null || unzipFilter.test(newUnzipTimes, fileNameInGzip)) {
+                    if (unzipFilter == null || unzipFilter.test(unzipTimes, fileNameInGzip)) {
                         Tuple2<byte[][], List<T>> listTuple2 = archiveFormat == ZIP
                                 ? reZipHandle(entryIs, zaConfig, zipFileName, newUnzipTimes, newUnzipLevel, false, unzipFilter,
                                 otherFilter, beforeAfterActionFilter, beforeUnzipAction, afterZipAction, otherAction)
@@ -459,13 +460,13 @@ public class ZipAdvanced {
 
                 if (isRunBeforeAfterAction && afterZipAction != null) {
                     ((MultiByteArrayInputStream) entryIs).reset();
-                    T t = afterZipAction.$(entryIs, newUnzipTimes, fileNameInGzip);
+                    T t = afterZipAction.$(entryIs, unzipTimes, fileNameInGzip);
                     ts.add(t);
                 }
 
             } else {
-                if ((otherFilter == null || otherFilter.test(newUnzipTimes, fileNameInGzip)) && otherAction != null) {
-                    ts.add(otherAction.$(gcis, baos, newUnzipTimes, fileNameInGzip));
+                if ((otherFilter == null || otherFilter.test(unzipTimes, fileNameInGzip)) && otherAction != null) {
+                    ts.add(otherAction.$(gcis, baos, unzipTimes, fileNameInGzip));
                     gzipBytes = ZipKit.gzip(new MultiByteArrayInputStream(baos.toByteArrays()), fileNameInGzip, outputGzipNameCharset);
                 } else {
                     gzipBytes = ZipKit.gzip(gcis, fileNameInGzip, outputGzipNameCharset);
@@ -551,7 +552,7 @@ public class ZipAdvanced {
      * @param is                      输入流
      * @param zaConfig                解压缩配置
      * @param zipFileName             压缩包文件名
-     * @param unzipTimes              压缩包的第几层。最开始的压缩包为第一层，压缩包里面的文件是第二层，压缩包里的压缩包再解压，则加一层。以此类推……
+     * @param unzipTimes              压缩包的第几层。最开始的压缩包解压后，里面的文件为第一层，压缩包里的压缩包再解压，则加一层。以此类推……
      * @param unzipLevel              解压层级。-1：无限解压，碰到压缩包就解压；0、1：只解压当前压缩包；&gt;1：解压次数
      * @param isCloseStream           是否关闭流
      * @param unzipFilter             内部压缩包的名称过滤 {@code BiPredicate<Integer, String>(压缩包的第几层, 文件名)}
@@ -616,10 +617,10 @@ public class ZipAdvanced {
 
                         InputStream entryIs = zipis;
 
-                        boolean isRunBeforeAfterAction = beforeAfterActionFilter == null || beforeAfterActionFilter.test(newUnzipTimes, entryFileName);
+                        boolean isRunBeforeAfterAction = beforeAfterActionFilter == null || beforeAfterActionFilter.test(unzipTimes, entryFileName);
                         if (isRunBeforeAfterAction && beforeUnzipAction != null) {
                             entryIs = IOs.toMultiBAIS(entryIs);
-                            T t = beforeUnzipAction.$(entryIs, newUnzipTimes, entryFileName);
+                            T t = beforeUnzipAction.$(entryIs, unzipTimes, entryFileName);
                             ts.add(t);
                             ((MultiByteArrayInputStream) entryIs).reset();      // 重复利用 MultiByteArrayInputStream，后续还要使用
                         }
@@ -628,7 +629,7 @@ public class ZipAdvanced {
                             IOs.copy(entryIs, tmpBaos);
                             byteArrays = tmpBaos.toByteArrays();
                         } else {
-                            if (unzipFilter == null || unzipFilter.test(newUnzipTimes, entryFileName)) {
+                            if (unzipFilter == null || unzipFilter.test(unzipTimes, entryFileName)) {
                                 Tuple2<byte[][], List<T>> listTuple2 = archiveFormat == ZIP
                                         ? reZipHandle(entryIs, zaConfig, zipFileName, newUnzipTimes, newUnzipLevel, false, unzipFilter,
                                         otherFilter, beforeAfterActionFilter, beforeUnzipAction, afterZipAction, otherAction)
@@ -644,12 +645,12 @@ public class ZipAdvanced {
                         }
 
                         if (isRunBeforeAfterAction && afterZipAction != null) {
-                            T t = afterZipAction.$(new MultiByteArrayInputStream(byteArrays), newUnzipTimes, entryFileName);
+                            T t = afterZipAction.$(new MultiByteArrayInputStream(byteArrays), unzipTimes, entryFileName);
                             ts.add(t);
                         }
                     } else {
-                        if ((otherFilter == null || otherFilter.test(newUnzipTimes, entryFileName)) && otherAction != null) {
-                            ts.add(otherAction.$(zipis, tmpBaos, newUnzipTimes, entryFileName));
+                        if ((otherFilter == null || otherFilter.test(unzipTimes, entryFileName)) && otherAction != null) {
+                            ts.add(otherAction.$(zipis, tmpBaos, unzipTimes, entryFileName));
                         } else {
                             IOs.copy(zipis, tmpBaos);
                         }
