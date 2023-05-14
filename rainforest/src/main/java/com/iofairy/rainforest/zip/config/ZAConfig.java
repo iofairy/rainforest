@@ -13,9 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.iofairy.rainforest.zip;
+package com.iofairy.rainforest.zip.config;
 
 import com.iofairy.falcon.zip.ArchiveFormat;
+import com.iofairy.rainforest.zip.ZipAdvanced;
 import com.iofairy.rainforest.zip.attr.*;
 import com.iofairy.top.G;
 
@@ -47,6 +48,7 @@ public class ZAConfig {
     private final Map<ArchiveFormat, ArchiveInputProperty> inputPropertyMap = new HashMap<>();
     private final Map<ArchiveFormat, ArchiveOutputProperty> outputPropertyMap = new HashMap<>();
 
+    private PasswordProvider passwordProvider = PasswordProvider.of();
 
     private ZAConfig() {
         this(null);
@@ -54,8 +56,8 @@ public class ZAConfig {
 
     public ZAConfig(ArchiveFormat[] needUnZipFormatArray, ArchiveProperty... archiveProperties) {
         addToNeedUnZipFormats(needUnZipFormatArray);
-        fillProperties();
-        putPropertiesToMap(archiveProperties);
+        fillProperties();                       // 先填充必要的压缩包属性
+        putPropertiesToMap(archiveProperties);  // 再根据外部提供的属性进行填充覆盖
     }
 
     public static ZAConfig of() {
@@ -64,6 +66,12 @@ public class ZAConfig {
 
     public static ZAConfig of(ArchiveFormat[] needUnZipFormats, ArchiveProperty... archiveProperties) {
         return new ZAConfig(needUnZipFormats, archiveProperties);
+    }
+
+    public static ZAConfig of(ArchiveFormat[] needUnZipFormats, PasswordProvider passwordProvider, ArchiveProperty... archiveProperties) {
+        ZAConfig zaConfig = new ZAConfig(needUnZipFormats, archiveProperties);
+        zaConfig.passwordProvider = passwordProvider == null ? PasswordProvider.of() : passwordProvider;
+        return zaConfig;
     }
 
     private void fillProperties() {
@@ -109,6 +117,15 @@ public class ZAConfig {
 
     public Map<ArchiveFormat, ArchiveOutputProperty> getOutputPropertyMap() {
         return Collections.unmodifiableMap(outputPropertyMap);
+    }
+
+    public PasswordProvider getPasswordProvider() {
+        return passwordProvider;
+    }
+
+    public ZAConfig setPasswordProvider(PasswordProvider passwordProvider) {
+        this.passwordProvider = passwordProvider == null ? PasswordProvider.of() : passwordProvider;
+        return this;
     }
 
     /**

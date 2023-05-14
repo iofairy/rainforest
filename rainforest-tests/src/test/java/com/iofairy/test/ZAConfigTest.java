@@ -1,7 +1,7 @@
 package com.iofairy.test;
 
 import com.iofairy.falcon.zip.ArchiveFormat;
-import com.iofairy.rainforest.zip.ZAConfig;
+import com.iofairy.rainforest.zip.config.ZAConfig;
 import com.iofairy.rainforest.zip.attr.GzipInputProperty;
 import com.iofairy.rainforest.zip.attr.ZipOutputProperty;
 import org.junit.jupiter.api.Test;

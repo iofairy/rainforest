@@ -20,16 +20,19 @@ import com.iofairy.falcon.io.*;
 import com.iofairy.falcon.zip.ArchiveFormat;
 import com.iofairy.lambda.RT3;
 import com.iofairy.lambda.RT4;
+import com.iofairy.rainforest.zip.ZipKit;
 import com.iofairy.rainforest.zip.attr.*;
+import com.iofairy.rainforest.zip.config.PasswordProvider;
 import com.iofairy.rainforest.zip.config.ZAConfig;
 import com.iofairy.rainforest.zip.config.ZipFileName;
 import com.iofairy.tcf.Close;
 import com.iofairy.tuple.Tuple;
 import com.iofairy.tuple.Tuple2;
-import org.apache.commons.compress.archivers.ArchiveEntry;
-import org.apache.commons.compress.archivers.zip.ZipArchiveEntry;
-import org.apache.commons.compress.archivers.zip.ZipArchiveInputStream;
-import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream;
+import net.lingala.zip4j.io.inputstream.ZipInputStream;
+import net.lingala.zip4j.io.outputstream.ZipOutputStream;
+import net.lingala.zip4j.model.*;
+import net.lingala.zip4j.util.InternalZipConstants;
+import org.apache.commons.compress.archivers.zip.Zip64Mode;
 import org.apache.commons.compress.compressors.gzip.*;
 
 import java.io.InputStream;
@@ -41,11 +44,11 @@ import java.util.function.BiPredicate;
 import static com.iofairy.falcon.zip.ArchiveFormat.*;
 
 /**
- * 解压缩高级方法
+ * 带密码的解压缩高级方法
  *
- * @since 0.0.1
+ * @since 0.1.0
  */
-public class ZipAdvanced {
+public class ZipProtectedAdvanced {
 
     /**
      * gzip包的处理逻辑（自动解压）<br>
@@ -160,7 +163,7 @@ public class ZipAdvanced {
                 if (!(unzipLevel == 0 || unzipLevel == 1)) {
                     if (unzipFilter == null || unzipFilter.test(unzipTimes, fileNameInGzip)) {
                         List<T> tmpTs = archiveFormat == ZIP
-                                ? zipHandle(entryIs, zaConfig, zipFileName, newUnzipTimes, newUnzipLevel,
+                                ? zipHandle(entryIs, zaConfig, zipFileName.setZipName(fileNameInGzip), newUnzipTimes, newUnzipLevel,
                                 false, unzipFilter, otherFilter, beforeAfterActionFilter, beforeUnzipAction, otherAction)
                                 : gzipHandle(entryIs, zaConfig, zipFileName.setGzipName(fileNameInGzip), newUnzipTimes, newUnzipLevel,
                                 false, unzipFilter, otherFilter, beforeAfterActionFilter, beforeUnzipAction, otherAction);
@@ -270,17 +273,21 @@ public class ZipAdvanced {
                                          RT3<InputStream, Integer, String, T, Exception> beforeUnzipAction,
                                          RT3<InputStream, Integer, String, T, Exception> otherAction) throws Exception {
         ZipInputProperty zipInputProperty = (ZipInputProperty) zaConfig.getInputProperty(ZIP);
+        PasswordProvider passwordProvider = zaConfig.getPasswordProvider();
+        char[] password = passwordProvider.getInitializedPassword() != null ? passwordProvider.getInitializedPassword() : passwordProvider.getPassword(zipFileName.getZipName());
+        passwordProvider.setInitializedPassword(null);      // 使用完一次，则置为 null，后续都使用文件名来获取密码
+
         ArrayList<T> ts = new ArrayList<>();
-        ZipArchiveInputStream zipis = null;
+        ZipInputStream zipis = null;
         try {
-            zipis = new ZipArchiveInputStream(is, zipInputProperty.getFileNameEncoding());
+            zipis = new ZipInputStream(is, password, Charset.forName(zipInputProperty.getFileNameEncoding()));
 
             int newUnzipTimes = unzipTimes + 1;
             int newUnzipLevel = unzipLevel < 0 ? unzipLevel : unzipLevel - 1;
 
-            ArchiveEntry entry;
+            LocalFileHeader entry;
             while ((entry = zipis.getNextEntry()) != null) {
-                String entryFileName = entry.getName();
+                String entryFileName = entry.getFileName();
                 if (entry.isDirectory()) continue;
                 String extension = FileName.of(entryFileName).ext;
 
@@ -297,7 +304,7 @@ public class ZipAdvanced {
                     if (!(unzipLevel == 0 || unzipLevel == 1)) {
                         if (unzipFilter == null || unzipFilter.test(unzipTimes, entryFileName)) {
                             List<T> tmpTs = archiveFormat == ZIP
-                                    ? zipHandle(entryIs, zaConfig, zipFileName, newUnzipTimes, newUnzipLevel, false,
+                                    ? zipHandle(entryIs, zaConfig, zipFileName.setZipName(entryFileName), newUnzipTimes, newUnzipLevel, false,
                                     unzipFilter, otherFilter, beforeAfterActionFilter, beforeUnzipAction, otherAction)
                                     : gzipHandle(entryIs, zaConfig, zipFileName.setGzipName(entryFileName), newUnzipTimes, newUnzipLevel,
                                     false, unzipFilter, otherFilter, beforeAfterActionFilter, beforeUnzipAction, otherAction);
@@ -449,7 +456,7 @@ public class ZipAdvanced {
                 if (!(unzipLevel == 0 || unzipLevel == 1)) {
                     if (unzipFilter == null || unzipFilter.test(unzipTimes, fileNameInGzip)) {
                         Tuple2<byte[][], List<T>> listTuple2 = archiveFormat == ZIP
-                                ? reZipHandle(entryIs, zaConfig, zipFileName, newUnzipTimes, newUnzipLevel, false, unzipFilter,
+                                ? reZipHandle(entryIs, zaConfig, zipFileName.setZipName(fileNameInGzip), newUnzipTimes, newUnzipLevel, false, unzipFilter,
                                 otherFilter, beforeAfterActionFilter, beforeUnzipAction, afterZipAction, otherAction)
                                 : reGzipHandle(entryIs, zaConfig, zipFileName.setGzipName(fileNameInGzip), newUnzipTimes, newUnzipLevel, false,
                                 unzipFilter, otherFilter, beforeAfterActionFilter, beforeUnzipAction, afterZipAction, otherAction);
@@ -582,28 +589,39 @@ public class ZipAdvanced {
                                                              RT4<InputStream, OutputStream, Integer, String, T, Exception> otherAction) throws Exception {
         ZipInputProperty zipInputProperty = (ZipInputProperty) zaConfig.getInputProperty(ZIP);
         ZipOutputProperty zipOutputProperty = (ZipOutputProperty) zaConfig.getOutputProperty(ZIP);
+        PasswordProvider passwordProvider = zaConfig.getPasswordProvider();
+        char[] password = passwordProvider.getInitializedPassword() != null ? passwordProvider.getInitializedPassword() : passwordProvider.getPassword(zipFileName.getZipName());
+        passwordProvider.setInitializedPassword(null);      // 使用完一次，则置为 null，后续都使用文件名来获取密码
+        ZipParameters defaultZipParameters = zipOutputProperty.getZipParameters();
 
         ArrayList<T> ts = new ArrayList<>();
-        ZipArchiveInputStream zipis = null;
+        ZipInputStream zipis = null;
         MultiByteArrayOutputStream baos = new MultiByteArrayOutputStream();
-        ZipArchiveOutputStream zos = null;
+        ZipOutputStream zos = null;
         try {
-            zipis = new ZipArchiveInputStream(is, zipInputProperty.getFileNameEncoding());
-            zos = new ZipArchiveOutputStream(baos);
-            zos.setLevel(zipOutputProperty.getLevel());
-            zos.setMethod(zipOutputProperty.getMethod());
-            zos.setUseZip64(zipOutputProperty.getZip64Mode());
-            zos.setEncoding(zipOutputProperty.getFileNameEncoding());
+            Charset charset = Charset.forName(zipInputProperty.getFileNameEncoding());
+            Zip4jConfig zip4jConfig = new Zip4jConfig(charset, InternalZipConstants.BUFF_SIZE, InternalZipConstants.USE_UTF8_FOR_PASSWORD_ENCODING_DECODING);
+
+            zipis = new ZipInputStream(is, password, charset);
+            ZipModel zipModel = new ZipModel();
+            zipModel.setZip64Format(zipOutputProperty.getZip64Mode() != Zip64Mode.Never);
+
+            zos = new ZipOutputStream(baos, password, zip4jConfig, zipModel);
 
             int newUnzipTimes = unzipTimes + 1;
             int newUnzipLevel = unzipLevel < 0 ? unzipLevel : unzipLevel - 1;
 
-            ArchiveEntry entry;
+            LocalFileHeader entry;
             while ((entry = zipis.getNextEntry()) != null) {
-                String entryFileName = entry.getName();
-                zos.putArchiveEntry(new ZipArchiveEntry(entryFileName));
+                String entryFileName = entry.getFileName();
+                ZipParameters zipParameters = new ZipParameters();
+                zipParameters.setFileNameInZip(entryFileName);
+                zipParameters.setEncryptFiles(entry.isEncrypted());
+                zipParameters.setEncryptionMethod(defaultZipParameters.getEncryptionMethod());
+
+                zos.putNextEntry(zipParameters);
                 if (entry.isDirectory()) {
-                    zos.closeArchiveEntry();
+                    zos.closeEntry();
                     continue;
                 }
 
@@ -633,7 +651,7 @@ public class ZipAdvanced {
                         } else {
                             if (unzipFilter == null || unzipFilter.test(unzipTimes, entryFileName)) {
                                 Tuple2<byte[][], List<T>> listTuple2 = archiveFormat == ZIP
-                                        ? reZipHandle(entryIs, zaConfig, zipFileName, newUnzipTimes, newUnzipLevel, false, unzipFilter,
+                                        ? reZipHandle(entryIs, zaConfig, zipFileName.setZipName(entryFileName), newUnzipTimes, newUnzipLevel, false, unzipFilter,
                                         otherFilter, beforeAfterActionFilter, beforeUnzipAction, afterZipAction, otherAction)
                                         : reGzipHandle(entryIs, zaConfig, zipFileName.setGzipName(entryFileName), newUnzipTimes, newUnzipLevel,
                                         false, unzipFilter, otherFilter, beforeAfterActionFilter, beforeUnzipAction, afterZipAction, otherAction);
@@ -664,7 +682,7 @@ public class ZipAdvanced {
                     }
 
                 } finally {
-                    zos.closeArchiveEntry();
+                    zos.closeEntry();
                 }
             }
         } finally {

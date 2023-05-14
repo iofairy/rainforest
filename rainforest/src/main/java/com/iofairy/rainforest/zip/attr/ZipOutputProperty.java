@@ -15,6 +15,12 @@
  */
 package com.iofairy.rainforest.zip.attr;
 
+import lombok.Getter;
+import lombok.Setter;
+import lombok.ToString;
+import lombok.experimental.Accessors;
+import net.lingala.zip4j.model.ZipParameters;
+import net.lingala.zip4j.model.enums.EncryptionMethod;
 import org.apache.commons.compress.archivers.zip.Zip64Mode;
 
 import java.nio.charset.Charset;
@@ -27,14 +33,20 @@ import java.util.zip.ZipEntry;
  *
  * @since 0.0.3
  */
+@Getter
+@ToString
 public class ZipOutputProperty implements ArchiveOutputProperty {
     /**
      * Compression level for next entry.
      */
+    @Setter
+    @Accessors(chain = true)
     private int level = Deflater.DEFAULT_COMPRESSION;
     /**
      * Default compression method for next entry.
      */
+    @Setter
+    @Accessors(chain = true)
     private int method = ZipEntry.DEFLATED;
     /**
      * 64位压缩模式
@@ -44,34 +56,17 @@ public class ZipOutputProperty implements ArchiveOutputProperty {
      * 文件名编码
      */
     private String fileNameEncoding = "GBK";
+    /**
+     * zip4j 库 ZipParameters
+     */
+    private ZipParameters zipParameters = new ZipParameters();
 
     public ZipOutputProperty() {
+        zipParameters.setEncryptionMethod(EncryptionMethod.ZIP_STANDARD);
     }
 
     public static ZipOutputProperty of() {
         return new ZipOutputProperty();
-    }
-
-    public int getLevel() {
-        return level;
-    }
-
-    public ZipOutputProperty setLevel(int level) {
-        this.level = level;
-        return this;
-    }
-
-    public int getMethod() {
-        return method;
-    }
-
-    public ZipOutputProperty setMethod(int method) {
-        this.method = method;
-        return this;
-    }
-
-    public Zip64Mode getZip64Mode() {
-        return zip64Mode;
     }
 
     public ZipOutputProperty setZip64Mode(Zip64Mode zip64Mode) {
@@ -81,10 +76,6 @@ public class ZipOutputProperty implements ArchiveOutputProperty {
         return this;
     }
 
-    public String getFileNameEncoding() {
-        return fileNameEncoding;
-    }
-
     public ZipOutputProperty setFileNameEncoding(String fileNameEncoding) {
         if (!Charset.isSupported(fileNameEncoding)) throw new UnsupportedCharsetException(fileNameEncoding);
 
@@ -92,13 +83,11 @@ public class ZipOutputProperty implements ArchiveOutputProperty {
         return this;
     }
 
-    @Override
-    public String toString() {
-        return "ZipOutputProperty{" +
-                "level=" + level +
-                ", method=" + method +
-                ", zip64Mode=" + zip64Mode +
-                ", fileNameEncoding='" + fileNameEncoding + '\'' +
-                '}';
+    public ZipOutputProperty setZipParameters(ZipParameters zipParameters) {
+        if (zipParameters != null) {
+            this.zipParameters = zipParameters;
+        }
+        return this;
     }
+
 }

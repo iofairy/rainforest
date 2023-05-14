@@ -1,6 +1,6 @@
 package com.iofairy.test;
 
-import com.iofairy.rainforest.zip.ZipFileName;
+import com.iofairy.rainforest.zip.config.ZipFileName;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
