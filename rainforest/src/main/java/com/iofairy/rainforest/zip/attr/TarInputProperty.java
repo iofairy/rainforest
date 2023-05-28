@@ -19,49 +19,50 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 import lombok.experimental.Accessors;
+import org.apache.commons.compress.archivers.tar.TarConstants;
 
 import java.nio.charset.Charset;
 import java.nio.charset.UnsupportedCharsetException;
 
 /**
- * ZIP解压时的属性设置
+ * tar包解压时的属性设置
  *
- * @since 0.0.3
+ * @since 0.2.0
  */
 @Getter
 @ToString
-public class ZipInputProperty implements ArchiveInputProperty {
+public class TarInputProperty implements ArchiveInputProperty {
     /**
      * 文件名编码
      */
-    private String fileNameEncoding = "GBK";
+    private String fileNameEncoding = "UTF-8";
     /**
-     * 是否使用InfoZIP Unicode Extra Fields(如果有)来设置文件名。
+     * the block size to use
      */
     @Setter
     @Accessors(chain = true)
-    private boolean useUnicodeExtraFields = true;
+    private int blockSize = TarConstants.DEFAULT_BLKSIZE;
     /**
-     * zip流是否尝试读取使用数据描述符的STORED条目
+     * the record size to use
      */
     @Setter
     @Accessors(chain = true)
-    private boolean allowStoredEntriesWithDataDescriptor = false;
+    private int recordSize = TarConstants.DEFAULT_RCDSIZE;
     /**
-     * zip流是否在开始时尝试跳过zip拆分签名(08074B50)。如果要读取拆分归档，则需要将此设置为true。
+     * 当设置为true时，组/用户id，模式，设备编号和时间戳的非法值将被忽略，并且字段设置为TarArchiveEntry.UNKNOWN。当设置为false时，这些非法字段将导致异常。
      */
     @Setter
     @Accessors(chain = true)
-    private boolean skipSplitSig = false;
+    private boolean lenient = false;
 
-    public ZipInputProperty() {
+    public TarInputProperty() {
     }
 
-    public static ZipInputProperty of() {
-        return new ZipInputProperty();
+    public static TarInputProperty of() {
+        return new TarInputProperty();
     }
 
-    public ZipInputProperty setFileNameEncoding(String fileNameEncoding) {
+    public TarInputProperty setFileNameEncoding(String fileNameEncoding) {
         if (!Charset.isSupported(fileNameEncoding)) throw new UnsupportedCharsetException(fileNameEncoding);
 
         this.fileNameEncoding = fileNameEncoding;

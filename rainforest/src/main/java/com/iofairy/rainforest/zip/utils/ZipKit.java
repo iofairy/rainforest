@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.iofairy.rainforest.zip;
+package com.iofairy.rainforest.zip.utils;
 
 import com.iofairy.falcon.fs.FilePath;
 import com.iofairy.falcon.io.IOs;
@@ -24,7 +24,6 @@ import org.apache.commons.compress.compressors.gzip.*;
 
 import java.io.InputStream;
 import java.nio.charset.Charset;
-import java.nio.charset.StandardCharsets;
 import java.util.Objects;
 
 /**
@@ -37,12 +36,13 @@ public class ZipKit {
     /**
      * 获取gzip中的文件名称。
      *
-     * @param gcis            GzipCompressorInputStream流
-     * @param gzipFileName    gzip包的名称，如：<code>gzip包.csv.gz</code>，则内部的文件名为：<code>gzip包.csv</code>
-     * @param gzipNameCharset gzip包的文件名编码，一般使用windows压缩的，编码为：GBK
+     * @param gcis         GzipCompressorInputStream流
+     * @param gzipFileName gzip包的名称，如：<code>gzip包.csv.gz</code>，则内部的文件名为：<code>gzip包.csv</code>
+     * @param fromCharset  gzip包的文件名编码，一般为：ISO-8859-1
+     * @param toCharset    gzip包的文件名编码，一般为：GBK
      * @return gzip内部文件名
      */
-    public static String fileNameInGzip(GzipCompressorInputStream gcis, String gzipFileName, Charset gzipNameCharset) {
+    public static String fileNameInGzip(GzipCompressorInputStream gcis, String gzipFileName, Charset fromCharset, Charset toCharset) {
         if (gcis == null && G.isEmpty(gzipFileName)) throw new NullPointerException("参数 gcis 与 gzipFileName 不能都为 null！");
         String filename = gcis == null ? null : gcis.getMetaData().getFilename();
         if (G.isEmpty(filename)) {
@@ -50,7 +50,7 @@ public class ZipKit {
             String newGzipFileName = FilePath.infoAuto(gzipFileName).getFileName().name;
             return GzipUtils.getUncompressedFilename(newGzipFileName);
         } else {
-            return new String(filename.getBytes(StandardCharsets.ISO_8859_1), gzipNameCharset);
+            return new String(filename.getBytes(fromCharset), toCharset);
         }
     }
 
@@ -58,18 +58,19 @@ public class ZipKit {
      * gzip压缩输入流，并转为 byte数组返回<br>
      * <b>注：此处 InputStream 输入流不能关闭，调用此方法的地方还会继续使用</b>
      *
-     * @param in              输入流
-     * @param fileName        压缩成gzip后，其内部的文件名
-     * @param fileNameCharset 压缩成gzip后，其内部的文件名的编码，一般windows下，使用 GBK
+     * @param in          输入流
+     * @param fileName    压缩成gzip后，其内部的文件名
+     * @param fromCharset gzip包的文件名编码，一般为：GBK
+     * @param toCharset   gzip包的文件名编码，一般为：ISO-8859-1
      * @return gzip压缩的 byte数组
      * @throws Exception 处理过程可能抛异常
      */
-    public static byte[][] gzip(InputStream in, String fileName, Charset fileNameCharset) throws Exception {
+    public static byte[][] gzip(InputStream in, String fileName, Charset fromCharset, Charset toCharset) throws Exception {
         final MultiByteArrayOutputStream bos = new MultiByteArrayOutputStream();
         GzipCompressorOutputStream gcos = null;
         try {
             GzipParameters gzipParameters = new GzipParameters();
-            gzipParameters.setFilename(new String(fileName.getBytes(fileNameCharset), StandardCharsets.ISO_8859_1));
+            gzipParameters.setFilename(new String(fileName.getBytes(fromCharset), toCharset));
             gcos = new GzipCompressorOutputStream(bos, gzipParameters);
             IOs.copy(in, gcos);
         } finally {

@@ -17,45 +17,47 @@ package com.iofairy.rainforest.zip.attr;
 
 import lombok.Getter;
 import lombok.ToString;
+import org.apache.commons.compress.archivers.sevenz.SevenZMethod;
+import org.tukaani.xz.LZMA2Options;
 
 import java.nio.charset.Charset;
 import java.nio.charset.UnsupportedCharsetException;
 
 /**
- * GZIP压缩时的属性设置
+ * 7zip压缩时的属性设置
  *
- * @since 0.0.3
+ * @since 0.2.0
  */
 @Getter
 @ToString
-public class GzipOutputProperty implements ArchiveOutputProperty {
+public class SevenZipOutputProperty implements ArchiveInputProperty {
     /**
-     * 文件名编码1
+     * 文件名编码
      */
-    private String fileNameEncoding1 = "ISO-8859-1";
+    private String fileNameEncoding = "GBK";
     /**
-     * 文件名编码2
+     * 默认压缩方法“存储”（使用其他方法非常非常慢）
      */
-    private String fileNameEncoding2 = "GBK";
+    private SevenZMethod sevenZMethod = SevenZMethod.COPY;
 
-    public GzipOutputProperty() {
+    public SevenZipOutputProperty() {
     }
 
-    public static GzipOutputProperty of() {
-        return new GzipOutputProperty();
+    public static SevenZipOutputProperty of() {
+        return new SevenZipOutputProperty();
     }
 
-    public GzipOutputProperty setFileNameEncoding1(String fileNameEncoding) {
+    public SevenZipOutputProperty setFileNameEncoding(String fileNameEncoding) {
         if (!Charset.isSupported(fileNameEncoding)) throw new UnsupportedCharsetException(fileNameEncoding);
 
-        this.fileNameEncoding1 = fileNameEncoding;
+        this.fileNameEncoding = fileNameEncoding;
         return this;
     }
 
-    public GzipOutputProperty setFileNameEncoding2(String fileNameEncoding) {
-        if (!Charset.isSupported(fileNameEncoding)) throw new UnsupportedCharsetException(fileNameEncoding);
-
-        this.fileNameEncoding2 = fileNameEncoding;
+    public SevenZipOutputProperty setSevenZMethod(SevenZMethod sevenZMethod) {
+        if (sevenZMethod != null) {
+            this.sevenZMethod = sevenZMethod;
+        }
         return this;
     }
 

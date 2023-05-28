@@ -16,46 +16,53 @@
 package com.iofairy.rainforest.zip.attr;
 
 import lombok.Getter;
+import lombok.Setter;
 import lombok.ToString;
+import lombok.experimental.Accessors;
 
 import java.nio.charset.Charset;
 import java.nio.charset.UnsupportedCharsetException;
 
 /**
- * GZIP压缩时的属性设置
+ * tar包压缩时的属性设置
  *
- * @since 0.0.3
+ * @since 0.2.0
  */
 @Getter
 @ToString
-public class GzipOutputProperty implements ArchiveOutputProperty {
+public class TarOutputProperty implements ArchiveInputProperty {
     /**
-     * 文件名编码1
+     * 文件名编码
      */
-    private String fileNameEncoding1 = "ISO-8859-1";
+    private String fileNameEncoding = "UTF-8";
     /**
-     * 文件名编码2
+     * 块大小，必须是 512 bytes的倍数。-511 内部会被设置成 512。
      */
-    private String fileNameEncoding2 = "GBK";
+    @Setter
+    @Accessors(chain = true)
+    private int blockSize = -511;
+    /**
+     * recordSize must always be 512 bytes
+     */
+    @Setter
+    @Accessors(chain = true)
+    private int recordSize = 512;
 
-    public GzipOutputProperty() {
+    public TarOutputProperty() {
     }
 
-    public static GzipOutputProperty of() {
-        return new GzipOutputProperty();
+    public static TarOutputProperty of() {
+        return new TarOutputProperty();
     }
 
-    public GzipOutputProperty setFileNameEncoding1(String fileNameEncoding) {
+    public String getFileNameEncoding() {
+        return fileNameEncoding;
+    }
+
+    public TarOutputProperty setFileNameEncoding(String fileNameEncoding) {
         if (!Charset.isSupported(fileNameEncoding)) throw new UnsupportedCharsetException(fileNameEncoding);
 
-        this.fileNameEncoding1 = fileNameEncoding;
-        return this;
-    }
-
-    public GzipOutputProperty setFileNameEncoding2(String fileNameEncoding) {
-        if (!Charset.isSupported(fileNameEncoding)) throw new UnsupportedCharsetException(fileNameEncoding);
-
-        this.fileNameEncoding2 = fileNameEncoding;
+        this.fileNameEncoding = fileNameEncoding;
         return this;
     }
 

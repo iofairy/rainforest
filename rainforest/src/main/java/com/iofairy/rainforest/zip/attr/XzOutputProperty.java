@@ -16,46 +16,46 @@
 package com.iofairy.rainforest.zip.attr;
 
 import lombok.Getter;
+import lombok.Setter;
 import lombok.ToString;
+import lombok.experimental.Accessors;
+import org.tukaani.xz.LZMA2Options;
 
 import java.nio.charset.Charset;
 import java.nio.charset.UnsupportedCharsetException;
 
 /**
- * GZIP压缩时的属性设置
+ * xz压缩时的属性设置
  *
- * @since 0.0.3
+ * @since 0.2.0
  */
 @Getter
 @ToString
-public class GzipOutputProperty implements ArchiveOutputProperty {
+public class XzOutputProperty implements ArchiveInputProperty {
     /**
-     * 文件名编码1
+     * 文件名编码
      */
-    private String fileNameEncoding1 = "ISO-8859-1";
+    private String fileNameEncoding = "GBK";
     /**
-     * 文件名编码2
+     * 预设0-3是快速预设与中等压缩。预设4-6是相当慢的预设与高压缩。默认值为 6。<br>
+     * 预设7-9类似于预设6，但使用更大的字典，并有更高的压缩器和解压缩器内存要求。<br>
+     * 除非未压缩的文件大小超过8mib、16mib或32mib，否则分别使用预置的7、8或9会浪费内存。
      */
-    private String fileNameEncoding2 = "GBK";
+    @Setter
+    @Accessors(chain = true)
+    private int preset = LZMA2Options.PRESET_DEFAULT;
 
-    public GzipOutputProperty() {
+    public XzOutputProperty() {
     }
 
-    public static GzipOutputProperty of() {
-        return new GzipOutputProperty();
+    public static XzOutputProperty of() {
+        return new XzOutputProperty();
     }
 
-    public GzipOutputProperty setFileNameEncoding1(String fileNameEncoding) {
+    public XzOutputProperty setFileNameEncoding(String fileNameEncoding) {
         if (!Charset.isSupported(fileNameEncoding)) throw new UnsupportedCharsetException(fileNameEncoding);
 
-        this.fileNameEncoding1 = fileNameEncoding;
-        return this;
-    }
-
-    public GzipOutputProperty setFileNameEncoding2(String fileNameEncoding) {
-        if (!Charset.isSupported(fileNameEncoding)) throw new UnsupportedCharsetException(fileNameEncoding);
-
-        this.fileNameEncoding2 = fileNameEncoding;
+        this.fileNameEncoding = fileNameEncoding;
         return this;
     }
 

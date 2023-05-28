@@ -29,6 +29,10 @@ public class ZipFileName implements Cloneable {
     private String zipName;             // .zip
     private String rarName;             // .rar
     private String sevenZName;          // .7z
+    private String tarName;             // .tar
+    private String tarGzName;           // .tar.gz / tgz
+    private String tarBz2Name;          // .tar.bz2 / tbz2
+    private String tarXzName;           // .tar.xz / txz
     private String zZipName;            // .zz
     private String brotliName;          // .br
     private String bzip2Name;           // .bz2
@@ -57,6 +61,10 @@ public class ZipFileName implements Cloneable {
             other.zipName = this.zipName;
             other.rarName = this.rarName;
             other.sevenZName = this.sevenZName;
+            other.tarName = this.tarName;
+            other.tarGzName = this.tarGzName;
+            other.tarBz2Name = this.tarBz2Name;
+            other.tarXzName = this.tarXzName;
             other.zZipName = this.zZipName;
             other.brotliName = this.brotliName;
             other.bzip2Name = this.bzip2Name;

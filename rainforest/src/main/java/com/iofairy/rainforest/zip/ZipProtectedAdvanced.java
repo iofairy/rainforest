@@ -20,7 +20,7 @@ import com.iofairy.falcon.io.*;
 import com.iofairy.falcon.zip.ArchiveFormat;
 import com.iofairy.lambda.RT3;
 import com.iofairy.lambda.RT4;
-import com.iofairy.rainforest.zip.ZipKit;
+import com.iofairy.rainforest.zip.utils.ZipKit;
 import com.iofairy.rainforest.zip.attr.*;
 import com.iofairy.rainforest.zip.config.PasswordProvider;
 import com.iofairy.rainforest.zip.config.ZAConfig;
@@ -138,7 +138,9 @@ public class ZipProtectedAdvanced {
                                           RT3<InputStream, Integer, String, T, Exception> beforeUnzipAction,
                                           RT3<InputStream, Integer, String, T, Exception> otherAction) throws Exception {
         GzipInputProperty gzipInputProperty = (GzipInputProperty) zaConfig.getInputProperty(GZIP);
-        Charset gzipNameCharset = Charset.forName(gzipInputProperty.getFileNameEncoding());
+        Charset inputFromCharset = Charset.forName(gzipInputProperty.getFileNameEncoding1());
+        Charset inputToCharset = Charset.forName(gzipInputProperty.getFileNameEncoding2());
+
         ArrayList<T> ts = new ArrayList<>();
         GzipCompressorInputStream gcis = null;
         try {
@@ -147,7 +149,7 @@ public class ZipProtectedAdvanced {
             int newUnzipTimes = unzipTimes + 1;
             int newUnzipLevel = unzipLevel < 0 ? unzipLevel : unzipLevel - 1;
 
-            String fileNameInGzip = ZipKit.fileNameInGzip(gcis, zipFileName.getGzipName(), gzipNameCharset);
+            String fileNameInGzip = ZipKit.fileNameInGzip(gcis, zipFileName.getGzipName(), inputFromCharset, inputToCharset);
             String extension = FileName.of(fileNameInGzip).ext;
 
             ArchiveFormat archiveFormat = ArchiveFormat.of(extension);
@@ -425,15 +427,17 @@ public class ZipProtectedAdvanced {
                                                               RT4<InputStream, OutputStream, Integer, String, T, Exception> otherAction) throws Exception {
         GzipInputProperty gzipInputProperty = (GzipInputProperty) zaConfig.getInputProperty(GZIP);
         GzipOutputProperty gzipOutputProperty = (GzipOutputProperty) zaConfig.getOutputProperty(GZIP);
-        Charset inputGzipNameCharset = Charset.forName(gzipInputProperty.getFileNameEncoding());
-        Charset outputGzipNameCharset = Charset.forName(gzipOutputProperty.getFileNameEncoding());
+        Charset inputFromCharset = Charset.forName(gzipInputProperty.getFileNameEncoding1());
+        Charset inputToCharset = Charset.forName(gzipInputProperty.getFileNameEncoding2());
+        Charset outputFromCharset = Charset.forName(gzipOutputProperty.getFileNameEncoding2());
+        Charset outputToCharset = Charset.forName(gzipOutputProperty.getFileNameEncoding1());
 
         ArrayList<T> ts = new ArrayList<>();
         GzipCompressorInputStream gcis = null;
         byte[][] gzipBytes;
         try {
             gcis = new GzipCompressorInputStream(is);
-            String fileNameInGzip = ZipKit.fileNameInGzip(gcis, zipFileName.getGzipName(), inputGzipNameCharset);
+            String fileNameInGzip = ZipKit.fileNameInGzip(gcis, zipFileName.getGzipName(), inputFromCharset, inputToCharset);
             String extension = FileName.of(fileNameInGzip).ext;
             MultiByteArrayOutputStream baos = new MultiByteArrayOutputStream();
 
@@ -465,7 +469,7 @@ public class ZipProtectedAdvanced {
                     }
                 }
 
-                gzipBytes = ZipKit.gzip(entryIs, fileNameInGzip, outputGzipNameCharset);
+                gzipBytes = ZipKit.gzip(entryIs, fileNameInGzip, outputFromCharset, outputToCharset);
 
                 if (isRunBeforeAfterAction && afterZipAction != null) {
                     ((MultiByteArrayInputStream) entryIs).reset();
@@ -476,9 +480,9 @@ public class ZipProtectedAdvanced {
             } else {
                 if ((otherFilter == null || otherFilter.test(unzipTimes, fileNameInGzip)) && otherAction != null) {
                     ts.add(otherAction.$(gcis, baos, unzipTimes, fileNameInGzip));
-                    gzipBytes = ZipKit.gzip(new MultiByteArrayInputStream(baos.toByteArrays()), fileNameInGzip, outputGzipNameCharset);
+                    gzipBytes = ZipKit.gzip(new MultiByteArrayInputStream(baos.toByteArrays()), fileNameInGzip, outputFromCharset, outputToCharset);
                 } else {
-                    gzipBytes = ZipKit.gzip(gcis, fileNameInGzip, outputGzipNameCharset);
+                    gzipBytes = ZipKit.gzip(gcis, fileNameInGzip, outputFromCharset, outputToCharset);
                 }
             }
 

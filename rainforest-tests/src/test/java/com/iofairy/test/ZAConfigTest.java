@@ -28,7 +28,7 @@ public class ZAConfigTest {
         System.out.println("zaConfig2: " + zaConfig2);
         zaConfig2.setNeedUnZipFormats(null);
         System.out.println("zaConfig2: " + zaConfig2);
-        zaConfig2.putProperties(GzipInputProperty.of().setFileNameEncoding("UTF-8"));
+        zaConfig2.putProperties(GzipInputProperty.of().setFileNameEncoding2("UTF-8"));
         System.out.println("zaConfig2: " + zaConfig2);
 
     }

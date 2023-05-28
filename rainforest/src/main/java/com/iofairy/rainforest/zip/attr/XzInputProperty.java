@@ -16,46 +16,50 @@
 package com.iofairy.rainforest.zip.attr;
 
 import lombok.Getter;
+import lombok.Setter;
 import lombok.ToString;
+import lombok.experimental.Accessors;
 
 import java.nio.charset.Charset;
 import java.nio.charset.UnsupportedCharsetException;
 
 /**
- * GZIP压缩时的属性设置
+ * xz解压时的属性设置
  *
- * @since 0.0.3
+ * @since 0.2.0
  */
 @Getter
 @ToString
-public class GzipOutputProperty implements ArchiveOutputProperty {
+public class XzInputProperty implements ArchiveInputProperty {
     /**
-     * 文件名编码1
+     * 文件名编码
      */
-    private String fileNameEncoding1 = "ISO-8859-1";
+    private String fileNameEncoding = "GBK";
     /**
-     * 文件名编码2
+     * 如果为真，则一直解压缩直到输入的结尾；
+     * 如果为假，则在第一个.xz流之后停止，并使输入位置指向.xz流之后的下一个字节。
      */
-    private String fileNameEncoding2 = "GBK";
+    @Setter
+    @Accessors(chain = true)
+    boolean decompressConcatenated = false;
+    /**
+     * 内存限制（单位：kb），超出内存限制，则会抛出 {@link org.apache.commons.compress.MemoryLimitException}
+     */
+    @Setter
+    @Accessors(chain = true)
+    int memoryLimitInKb = -1;
 
-    public GzipOutputProperty() {
+    public XzInputProperty() {
     }
 
-    public static GzipOutputProperty of() {
-        return new GzipOutputProperty();
+    public static XzInputProperty of() {
+        return new XzInputProperty();
     }
 
-    public GzipOutputProperty setFileNameEncoding1(String fileNameEncoding) {
+    public XzInputProperty setFileNameEncoding(String fileNameEncoding) {
         if (!Charset.isSupported(fileNameEncoding)) throw new UnsupportedCharsetException(fileNameEncoding);
 
-        this.fileNameEncoding1 = fileNameEncoding;
-        return this;
-    }
-
-    public GzipOutputProperty setFileNameEncoding2(String fileNameEncoding) {
-        if (!Charset.isSupported(fileNameEncoding)) throw new UnsupportedCharsetException(fileNameEncoding);
-
-        this.fileNameEncoding2 = fileNameEncoding;
+        this.fileNameEncoding = fileNameEncoding;
         return this;
     }
 

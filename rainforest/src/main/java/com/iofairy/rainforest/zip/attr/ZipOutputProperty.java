@@ -19,8 +19,11 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 import lombok.experimental.Accessors;
+import net.lingala.zip4j.model.Zip4jConfig;
+import net.lingala.zip4j.model.ZipModel;
 import net.lingala.zip4j.model.ZipParameters;
 import net.lingala.zip4j.model.enums.EncryptionMethod;
+import net.lingala.zip4j.util.InternalZipConstants;
 import org.apache.commons.compress.archivers.zip.Zip64Mode;
 
 import java.nio.charset.Charset;
@@ -60,9 +63,22 @@ public class ZipOutputProperty implements ArchiveOutputProperty {
      * zip4j 库 ZipParameters
      */
     private ZipParameters zipParameters = new ZipParameters();
+    /**
+     * zip4j 库 Zip4jConfig
+     */
+    private Zip4jConfig zip4jConfig = new Zip4jConfig(
+            Charset.forName(fileNameEncoding),
+            InternalZipConstants.BUFF_SIZE,
+            InternalZipConstants.USE_UTF8_FOR_PASSWORD_ENCODING_DECODING);
+    /**
+     * zip4j 库 zipModel
+     */
+    private ZipModel zipModel = new ZipModel();
+
 
     public ZipOutputProperty() {
         zipParameters.setEncryptionMethod(EncryptionMethod.ZIP_STANDARD);
+        zipModel.setZip64Format(zip64Mode != Zip64Mode.Never);
     }
 
     public static ZipOutputProperty of() {
@@ -72,6 +88,7 @@ public class ZipOutputProperty implements ArchiveOutputProperty {
     public ZipOutputProperty setZip64Mode(Zip64Mode zip64Mode) {
         if (zip64Mode != null) {
             this.zip64Mode = zip64Mode;
+            zipModel.setZip64Format(zip64Mode != Zip64Mode.Never);
         }
         return this;
     }
@@ -80,6 +97,10 @@ public class ZipOutputProperty implements ArchiveOutputProperty {
         if (!Charset.isSupported(fileNameEncoding)) throw new UnsupportedCharsetException(fileNameEncoding);
 
         this.fileNameEncoding = fileNameEncoding;
+        this.zip4jConfig = new Zip4jConfig(
+                Charset.forName(fileNameEncoding),
+                zip4jConfig.getBufferSize(),
+                zip4jConfig.isUseUtf8CharsetForPasswords());
         return this;
     }
 
@@ -90,4 +111,17 @@ public class ZipOutputProperty implements ArchiveOutputProperty {
         return this;
     }
 
+    public ZipOutputProperty setZip4jConfig(Zip4jConfig zip4jConfig) {
+        if (zip4jConfig != null) {
+            this.zip4jConfig = zip4jConfig;
+        }
+        return this;
+    }
+
+    public ZipOutputProperty setZipModel(ZipModel zipModel) {
+        if (zipModel != null) {
+            this.zipModel = zipModel;
+        }
+        return this;
+    }
 }

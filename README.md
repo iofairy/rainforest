@@ -13,11 +13,11 @@ Rainforest, a library of Java utility classes for Java 8+
 <dependency>
   <groupId>com.iofairy</groupId>
   <artifactId>rainforest</artifactId>
-  <version>0.1.0</version>
+  <version>0.2.0</version>
 </dependency>
 ```
 
 ### Gradle
 ```
-implementation 'com.iofairy:rainforest:0.1.0'
+implementation 'com.iofairy:rainforest:0.2.0'
 ```

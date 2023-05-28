@@ -15,6 +15,9 @@
  */
 package com.iofairy.rainforest.zip.attr;
 
+import lombok.Getter;
+import lombok.ToString;
+
 import java.nio.charset.Charset;
 import java.nio.charset.UnsupportedCharsetException;
 
@@ -23,11 +26,17 @@ import java.nio.charset.UnsupportedCharsetException;
  *
  * @since 0.0.3
  */
+@Getter
+@ToString
 public class GzipInputProperty implements ArchiveInputProperty {
     /**
-     * 文件名编码
+     * 文件名编码1
      */
-    private String fileNameEncoding = "GBK";
+    private String fileNameEncoding1 = "ISO-8859-1";
+    /**
+     * 文件名编码2
+     */
+    private String fileNameEncoding2 = "GBK";
 
     public GzipInputProperty() {
     }
@@ -36,21 +45,18 @@ public class GzipInputProperty implements ArchiveInputProperty {
         return new GzipInputProperty();
     }
 
-    public String getFileNameEncoding() {
-        return fileNameEncoding;
-    }
-
-    public GzipInputProperty setFileNameEncoding(String fileNameEncoding) {
+    public GzipInputProperty setFileNameEncoding1(String fileNameEncoding) {
         if (!Charset.isSupported(fileNameEncoding)) throw new UnsupportedCharsetException(fileNameEncoding);
 
-        this.fileNameEncoding = fileNameEncoding;
+        this.fileNameEncoding1 = fileNameEncoding;
         return this;
     }
 
-    @Override
-    public String toString() {
-        return "GzipInputProperty{" +
-                "fileNameEncoding='" + fileNameEncoding + '\'' +
-                '}';
+    public GzipInputProperty setFileNameEncoding2(String fileNameEncoding) {
+        if (!Charset.isSupported(fileNameEncoding)) throw new UnsupportedCharsetException(fileNameEncoding);
+
+        this.fileNameEncoding2 = fileNameEncoding;
+        return this;
     }
+
 }

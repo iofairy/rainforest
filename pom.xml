@@ -6,7 +6,7 @@
 
     <groupId>com.iofairy</groupId>
     <artifactId>rainforest-parent</artifactId>
-    <version>0.1.0</version>
+    <version>0.2.0</version>
     <modules>
         <module>rainforest</module>
         <module>rainforest-tests</module>
@@ -22,12 +22,13 @@
         <maven.compiler.target>8</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
-        <functional.version>0.4.1</functional.version>
-        <falcon.version>0.4.1</falcon.version>
+        <functional.version>0.4.2</functional.version>
+        <falcon.version>0.4.5</falcon.version>
 
         <commons-compress.version>1.22</commons-compress.version>
         <lombok.version>1.18.26</lombok.version>
         <zip4j.version>2.11.5</zip4j.version>
+        <xz.version>1.9</xz.version>
     </properties>
 
     <dependencyManagement>
@@ -55,6 +56,12 @@
                 <groupId>net.lingala.zip4j</groupId>
                 <artifactId>zip4j</artifactId>
                 <version>${zip4j.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.tukaani</groupId>
+                <artifactId>xz</artifactId>
+                <version>${xz.version}</version>
             </dependency>
 
             <dependency>
@@ -110,6 +117,13 @@
                     <encoding>${project.build.sourceEncoding}</encoding>
                     <source>${maven.compiler.source}</source>
                     <target>${maven.compiler.target}</target>
+
+                    <compilerArgs>
+                        <!-- 解决编译提示 “有关详细信息, 请使用 -Xlint:deprecation 重新编译” ，主要是检查哪些地方使用过时的API等-->
+                        <arg>-Xlint:deprecation</arg>
+                        <!-- 检查代码中 “未经检查的转换”，这个通常不开启，开启会有特别多的警告，很多类型转换的警告不好消除 -->
+                        <!--<arg>-Xlint:unchecked</arg>-->
+                    </compilerArgs>
                 </configuration>
             </plugin>
 
