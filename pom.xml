@@ -23,12 +23,14 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
         <functional.version>0.4.2</functional.version>
-        <falcon.version>0.4.5</falcon.version>
+        <falcon.version>0.4.6</falcon.version>
 
         <commons-compress.version>1.22</commons-compress.version>
         <lombok.version>1.18.26</lombok.version>
         <zip4j.version>2.11.5</zip4j.version>
         <xz.version>1.9</xz.version>
+
+        <slf4j.version>2.0.7</slf4j.version>
     </properties>
 
     <dependencyManagement>
@@ -68,6 +70,12 @@
                 <groupId>org.projectlombok</groupId>
                 <artifactId>lombok</artifactId>
                 <version>${lombok.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.slf4j</groupId>
+                <artifactId>slf4j-api</artifactId>
+                <version>${slf4j.version}</version>
             </dependency>
 
         </dependencies>

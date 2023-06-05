@@ -47,7 +47,7 @@ public class ZipKit {
         String filename = gcis == null ? null : gcis.getMetaData().getFilename();
         if (G.isEmpty(filename)) {
             Objects.requireNonNull(gzipFileName, "参数 gzipFileName 不能都为 null！");
-            String newGzipFileName = FilePath.infoAuto(gzipFileName).getFileName().name;
+            String newGzipFileName = FilePath.info(gzipFileName).getFileName().name;
             return GzipUtils.getUncompressedFilename(newGzipFileName);
         } else {
             return new String(filename.getBytes(fromCharset), toCharset);

@@ -47,6 +47,7 @@ import static com.iofairy.falcon.zip.ArchiveFormat.*;
  * 带密码的解压缩高级方法
  *
  * @since 0.1.0
+ * @deprecated Since version 0.2.0, replaced by {@link com.iofairy.rainforest.zip.compress.SuperCompressor}
  */
 public class ZipProtectedAdvanced {
 

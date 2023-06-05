@@ -27,6 +27,7 @@ import java.util.regex.Pattern;
  * @since 0.1.0
  */
 @Getter
+@ToString(exclude = {"password"})
 public class ZipPassword {
     /**
      * 带通配符的文件名，通配符仅支持：
@@ -92,14 +93,7 @@ public class ZipPassword {
         return regex;
     }
 
-    @Override
-    public String toString() {
-        return "ZipPassword{" +
-                "fileName='" + fileName + '\'' +
-                ", pattern=" + pattern +
-                ", password=" + password +
-                '}';
-    }
+
 }
 
 
