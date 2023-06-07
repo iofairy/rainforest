@@ -13,13 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.iofairy.rainforest.zip.compress;
+package com.iofairy.rainforest.zip.ac;
 
 import com.iofairy.falcon.zip.ArchiveFormat;
 import com.iofairy.lambda.*;
 import com.iofairy.rainforest.zip.base.*;
 import com.iofairy.si.SI;
-import com.iofairy.top.G;
 import com.iofairy.tuple.Tuple2;
 
 import java.io.InputStream;
@@ -29,11 +28,12 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * 高级压缩包处理器
+ * Super <b>AC</b> (<b>Archiver</b> and <b>Compressor</b>)<br>
+ * 高级归档和压缩器
  *
  * @since 0.2.0
  */
-public interface SuperCompressor {
+public interface SuperAC {
     ArchiveFormat format();
 
     /**
@@ -50,11 +50,11 @@ public interface SuperCompressor {
      * @param beforeUnzipAction 解压之前的操作 {@code RT4<InputStream, Integer, String, String, R, Exception>(解压之前文件流, 压缩包的第几层, 父压缩包的文件名，当前内部文件的名称, 返回值)}
      * @param otherAction       非压缩包的处理逻辑 {@code RT4<InputStream, Integer, String, String, R, Exception>(解压之前文件流, 压缩包的第几层, 父压缩包的文件名，当前内部文件的名称, 返回值)}
      * @param zipLogLevel       解压缩日志等级
-     * @param compressors       支持哪些类型的压缩/解压处理器（必须包含参数{@code inputStreamType}指定的压缩处理器）
+     * @param superACs          支持哪些类型的压缩/解压处理器（必须包含参数{@code inputStreamType}指定的压缩处理器）
      * @param <R>               Action返回值类型
      * @return 返回任意你想返回的内容，便于你在lambda表达式外进行操作
      * @throws Exception                处理过程可能抛异常
-     * @throws IllegalArgumentException 在 {@code compressors}中未找到与{@code inputStreamType}相匹配 compressor
+     * @throws IllegalArgumentException 在 {@code superACs}中未找到与{@code inputStreamType}相匹配 superAC
      */
     static <R> List<R> unzip(final InputStream is,
                              final ArchiveFormat inputStreamType,
@@ -66,31 +66,28 @@ public interface SuperCompressor {
                              RT4<InputStream, ? super Integer, ? super String, ? super String, ? extends R, Exception> beforeUnzipAction,
                              RT4<InputStream, ? super Integer, ? super String, ? super String, ? extends R, Exception> otherAction,
                              ZipLogLevel zipLogLevel,
-                             List<SuperCompressor> compressors
+                             List<SuperAC> superACs
     ) throws Exception {
-        if (G.hasNull(is, inputStreamType)) throw new NullPointerException("参数`is`或`inputStreamType`不能为null！");
-        if (G.isEmpty(compressors)) throw new NullPointerException("参数`compressors`不能为null或空！");
+        Tuple2<Map<ArchiveFormat, SuperAC>, SuperAC> tuple = SuperACs.checkParameters(is, inputStreamType, superACs);
+        Map<ArchiveFormat, SuperAC> superACMap = tuple._1;
+        SuperAC superAC = tuple._2;
+
         if (zipFileName == null) zipFileName = "";
-
-        Map<ArchiveFormat, SuperCompressor> compressorMap = SuperCompressors.toCompressorMap(compressors);
-
-        SuperCompressor superCompressor = compressorMap.get(inputStreamType);
-        if (superCompressor == null) throw new IllegalArgumentException("在`compressors`中未找到与`inputStreamType`相匹配compressor！");
-
         /*
          * 打印日志信息
          */
-        String unzipId = SuperCompressors.getUnzipId(7);
+        String unzipId = SuperACs.getUnzipId(7);
         long startTime = System.currentTimeMillis();
-        LogPrinter.printBeforeUnzip(unzipId, zipFileName, zipLogLevel, "SuperCompressor.unzip()");
+        String logSource = SuperAC.class.getSimpleName() + ".unzip()";
+        LogPrinter.printBeforeUnzip(unzipId, zipFileName, zipLogLevel, logSource);
 
         /*
          * 压缩包处理
          */
         List<R> unzip = null;
         try {
-            unzip = superCompressor.unzip(is, zipFileName, 1, unzipLevel, true, unzipFilter,
-                    otherFilter, beforeUnzipFilter, beforeUnzipAction, otherAction, zipLogLevel, compressorMap);
+            unzip = superAC.unzip(is, zipFileName, 1, unzipLevel, true, unzipFilter,
+                    otherFilter, beforeUnzipFilter, beforeUnzipAction, otherAction, zipLogLevel, superACMap);
         } catch (Exception e) {
             String message = SI.$("解压ID：[${unzipId}]，unzip() 解压【${zipFileName}】异常！", unzipId, zipFileName);
             throw new RuntimeException(message, e);
@@ -99,7 +96,7 @@ public interface SuperCompressor {
         /*
          * 打印日志信息
          */
-        LogPrinter.printAfterUnzip(unzipId, zipFileName, zipLogLevel, "SuperCompressor.unzip()", startTime);
+        LogPrinter.printAfterUnzip(unzipId, zipFileName, zipLogLevel, logSource, startTime);
 
         return unzip;
     }
@@ -117,7 +114,7 @@ public interface SuperCompressor {
      * @param otherAction     非压缩包的处理逻辑 {@code RT5<InputStream, OutputStream, Integer, String, String, R, Exception>
      *                        (压缩之后文件流, 处理完文件的输出流，压缩包的第几层, 父压缩包的文件名，当前内部文件的名称, 返回值)}<b>（处理完后，一定要写入所提供的输出流中 OutputStream）</b>
      * @param zipLogLevel     解压缩日志等级
-     * @param compressors     支持哪些类型的压缩/解压处理器（必须包含参数{@code inputStreamType}指定的压缩处理器）
+     * @param superACs        支持哪些类型的压缩/解压处理器（必须包含参数{@code inputStreamType}指定的压缩处理器）
      * @param <R>             Action返回值类型
      * @return 返回 压缩后的字节流数组 以及 任意你想返回的内容，便于你在lambda表达式外进行操作
      * @throws Exception 处理过程可能抛异常
@@ -130,10 +127,10 @@ public interface SuperCompressor {
                                   PT3<? super Integer, ? super String, ? super String, Exception> otherFilter,
                                   RT5<InputStream, OutputStream, ? super Integer, ? super String, ? super String, ? extends R, Exception> otherAction,
                                   ZipLogLevel zipLogLevel,
-                                  List<SuperCompressor> compressors
+                                  List<SuperAC> superACs
     ) throws Exception {
         return reZip(is, inputStreamType, zipFileName, unzipLevel, null, null, unzipFilter, otherFilter, null,
-                null, null, null, null, null, null, otherAction, zipLogLevel, compressors);
+                null, null, null, null, null, null, otherAction, zipLogLevel, superACs);
     }
 
     /**
@@ -153,7 +150,7 @@ public interface SuperCompressor {
      * @param otherAction       非压缩包的处理逻辑 {@code RT5<InputStream, OutputStream, Integer, String, String, R, Exception>
      *                          (压缩之后文件流, 处理完文件的输出流，压缩包的第几层, 父压缩包的文件名，当前内部文件的名称, 返回值)}<b>（处理完后，一定要写入所提供的输出流中 OutputStream）</b>
      * @param zipLogLevel       解压缩日志等级
-     * @param compressors       支持哪些类型的压缩/解压处理器（必须包含参数{@code inputStreamType}指定的压缩处理器）
+     * @param superACs          支持哪些类型的压缩/解压处理器（必须包含参数{@code inputStreamType}指定的压缩处理器）
      * @param <R>               Action返回值类型
      * @return 返回 压缩后的字节流数组 以及 任意你想返回的内容，便于你在lambda表达式外进行操作
      * @throws Exception 处理过程可能抛异常
@@ -170,10 +167,10 @@ public interface SuperCompressor {
                                   RT4<InputStream, ? super Integer, ? super String, ? super String, ? extends R, Exception> afterZipAction,
                                   RT5<InputStream, OutputStream, ? super Integer, ? super String, ? super String, ? extends R, Exception> otherAction,
                                   ZipLogLevel zipLogLevel,
-                                  List<SuperCompressor> compressors
+                                  List<SuperAC> superACs
     ) throws Exception {
         return reZip(is, inputStreamType, zipFileName, unzipLevel, null, null, unzipFilter, otherFilter, beforeUnzipFilter,
-                afterZipFilter, null, null, null, beforeUnzipAction, afterZipAction, otherAction, zipLogLevel, compressors);
+                afterZipFilter, null, null, null, beforeUnzipAction, afterZipAction, otherAction, zipLogLevel, superACs);
     }
 
     /**
@@ -198,10 +195,11 @@ public interface SuperCompressor {
      * @param otherAction       非压缩包的处理逻辑 {@code RT5<InputStream, OutputStream, Integer, String, String, R, Exception>
      *                          (压缩之后文件流, 处理完文件的输出流，压缩包的第几层, 父压缩包的文件名，当前内部文件的名称, 返回值)}<b>（处理完后，一定要写入所提供的输出流中 OutputStream）</b>
      * @param zipLogLevel       解压缩日志等级
-     * @param compressors       支持哪些类型的压缩/解压处理器（必须包含参数{@code inputStreamType}指定的压缩处理器）
+     * @param superACs          支持哪些类型的压缩/解压处理器（必须包含参数{@code inputStreamType}指定的压缩处理器）
      * @param <R>               Action返回值类型
      * @return 返回 压缩后的字节流数组 以及 任意你想返回的内容，便于你在lambda表达式外进行操作
-     * @throws Exception 处理过程可能抛异常
+     * @throws Exception                处理过程可能抛异常
+     * @throws IllegalArgumentException 在 {@code superACs}中未找到与{@code inputStreamType}相匹配 superAC
      */
     static <R> ZipResult<R> reZip(final InputStream is,
                                   final ArchiveFormat inputStreamType,
@@ -220,31 +218,28 @@ public interface SuperCompressor {
                                   RT4<InputStream, ? super Integer, ? super String, ? super String, ? extends R, Exception> afterZipAction,
                                   RT5<InputStream, OutputStream, ? super Integer, ? super String, ? super String, ? extends R, Exception> otherAction,
                                   ZipLogLevel zipLogLevel,
-                                  List<SuperCompressor> compressors
+                                  List<SuperAC> superACs
     ) throws Exception {
-        if (G.hasNull(is, inputStreamType)) throw new NullPointerException("参数`is`或`inputStreamType`不能为null！");
-        if (G.isEmpty(compressors)) throw new NullPointerException("参数`compressors`不能为null或空！");
+        Tuple2<Map<ArchiveFormat, SuperAC>, SuperAC> tuple = SuperACs.checkParameters(is, inputStreamType, superACs);
+        Map<ArchiveFormat, SuperAC> superACMap = tuple._1;
+        SuperAC superAC = tuple._2;
+
         if (zipFileName == null) zipFileName = "";
-
-        Map<ArchiveFormat, SuperCompressor> compressorMap = SuperCompressors.toCompressorMap(compressors);
-
-        SuperCompressor superCompressor = compressorMap.get(inputStreamType);
-        if (superCompressor == null) throw new IllegalArgumentException("在`compressors`中未找到与`inputStreamType`相匹配compressor！");
-
         /*
          * 打印日志信息
          */
-        String unzipId = SuperCompressors.getUnzipId(7);
+        String unzipId = SuperACs.getUnzipId(7);
         long startTime = System.currentTimeMillis();
-        LogPrinter.printBeforeUnzip(unzipId, zipFileName, zipLogLevel, "SuperCompressor.reZip()");
+        String logSource = SuperAC.class.getSimpleName() + ".reZip()";
+        LogPrinter.printBeforeUnzip(unzipId, zipFileName, zipLogLevel, logSource);
 
         /*
          * 压缩包处理
          */
         ZipResult<R> zipResult = null;
         try {
-            zipResult = superCompressor.reZip(is, zipFileName, 1, unzipLevel, true, addFileFilter, deleteFileFilter, unzipFilter, otherFilter, beforeUnzipFilter,
-                    afterZipFilter, addFilesAction, addBytesAction, deleteFileAction, beforeUnzipAction, afterZipAction, otherAction, zipLogLevel, compressorMap);
+            zipResult = superAC.reZip(is, zipFileName, 1, unzipLevel, true, addFileFilter, deleteFileFilter, unzipFilter, otherFilter, beforeUnzipFilter,
+                    afterZipFilter, addFilesAction, addBytesAction, deleteFileAction, beforeUnzipAction, afterZipAction, otherAction, zipLogLevel, superACMap);
         } catch (Exception e) {
             String message = SI.$("解压ID：[${unzipId}]，reZip() 解压【${zipFileName}】异常！", unzipId, zipFileName);
             throw new RuntimeException(message, e);
@@ -253,7 +248,7 @@ public interface SuperCompressor {
         /*
          * 打印日志信息
          */
-        LogPrinter.printAfterUnzip(unzipId, zipFileName, zipLogLevel, "SuperCompressor.reZip()", startTime);
+        LogPrinter.printAfterUnzip(unzipId, zipFileName, zipLogLevel, logSource, startTime);
 
         return zipResult;
     }
@@ -274,7 +269,7 @@ public interface SuperCompressor {
      * @param beforeUnzipAction 解压之前的操作 {@code RT4<InputStream, Integer, String, String, R, Exception>(解压之前文件流, 压缩包的第几层, 父压缩包的文件名，当前内部文件的名称, 返回值)}
      * @param otherAction       非压缩包的处理逻辑 {@code RT4<InputStream, Integer, String, String, R, Exception>(解压之前文件流, 压缩包的第几层, 父压缩包的文件名，当前内部文件的名称, 返回值)}
      * @param zipLogLevel       解压缩日志等级
-     * @param compressors       支持哪些类型的压缩/解压处理器（理论上应该传入不可变的Map{@link Collections#unmodifiableMap(Map)}，避免被外部修改）
+     * @param superACs          支持哪些类型的压缩/解压处理器（理论上应该传入不可变的Map{@link Collections#unmodifiableMap(Map)}，避免被外部修改）
      * @param <R>               Action返回值类型
      * @return 返回任意你想返回的内容，便于你在lambda表达式外进行操作
      * @throws Exception 处理过程可能抛异常
@@ -290,7 +285,7 @@ public interface SuperCompressor {
                       RT4<InputStream, ? super Integer, ? super String, ? super String, ? extends R, Exception> beforeUnzipAction,
                       RT4<InputStream, ? super Integer, ? super String, ? super String, ? extends R, Exception> otherAction,
                       ZipLogLevel zipLogLevel,
-                      Map<ArchiveFormat, SuperCompressor> compressors
+                      Map<ArchiveFormat, SuperAC> superACs
     ) throws Exception;
 
 
@@ -317,7 +312,7 @@ public interface SuperCompressor {
      * @param otherAction       非压缩包的处理逻辑 {@code RT5<InputStream, OutputStream, Integer, String, String, R, Exception>
      *                          (压缩之后文件流, 处理完文件的输出流，压缩包的第几层, 父压缩包的文件名，当前内部文件的名称, 返回值)}<b>（处理完后，一定要写入所提供的输出流中 OutputStream）</b>
      * @param zipLogLevel       解压缩日志等级
-     * @param compressors       支持哪些类型的压缩/解压处理器（理论上应该传入不可变的Map{@link Collections#unmodifiableMap(Map)}，避免被外部修改）
+     * @param superACs          支持哪些类型的压缩/解压处理器（理论上应该传入不可变的Map{@link Collections#unmodifiableMap(Map)}，避免被外部修改）
      * @param <R>               Action返回值类型
      * @return 返回 压缩后的字节流数组 以及 任意你想返回的内容，便于你在lambda表达式外进行操作
      * @throws Exception 处理过程可能抛异常
@@ -340,7 +335,7 @@ public interface SuperCompressor {
                            RT4<InputStream, ? super Integer, ? super String, ? super String, ? extends R, Exception> afterZipAction,
                            RT5<InputStream, OutputStream, ? super Integer, ? super String, ? super String, ? extends R, Exception> otherAction,
                            ZipLogLevel zipLogLevel,
-                           Map<ArchiveFormat, SuperCompressor> compressors
+                           Map<ArchiveFormat, SuperAC> superACs
     ) throws Exception;
 
 

@@ -21,6 +21,7 @@ import com.iofairy.falcon.zip.ArchiveFormat;
 import com.iofairy.lambda.RT3;
 import com.iofairy.lambda.RT4;
 import com.iofairy.rainforest.zip.attr.*;
+import com.iofairy.rainforest.zip.ac.SuperAC;
 import com.iofairy.rainforest.zip.config.ZAConfig;
 import com.iofairy.rainforest.zip.config.ZipFileName;
 import com.iofairy.rainforest.zip.utils.ZipKit;
@@ -45,7 +46,7 @@ import static com.iofairy.falcon.zip.ArchiveFormat.*;
  * 解压缩高级方法
  *
  * @since 0.0.1
- * @deprecated Since version 0.2.0, replaced by {@link com.iofairy.rainforest.zip.compress.SuperCompressor}
+ * @deprecated Since version 0.2.0, replaced by {@link SuperAC}
  */
 public class ZipAdvanced {
 

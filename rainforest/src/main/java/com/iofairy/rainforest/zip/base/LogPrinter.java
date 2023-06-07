@@ -19,7 +19,7 @@ import com.iofairy.rainforest.zip.utils.StringKit;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * SuperCompressor日志打印控制
+ * SuperAC日志打印控制
  *
  * @since 0.2.0
  */
@@ -103,7 +103,7 @@ public class LogPrinter {
     public static void printBeforeAfter(String unzipId, int unzipTimes, String zipFileName, String entryFileName, ZipLogLevel zipLogLevel, String logSource, String extMsg) {
         if (zipLogLevel.level >= ZipLogLevel.ALL.level) {
             String repeat = StringKit.repeat("&", Math.max(MAX_REPEAT_TIMES - unzipTimes, 1) * REPEAT_FACTOR);
-            logs("{} 解压ID：[{}]，当前unzipTimes为：[{}]，【{}】中的压缩包【{}】解压缩[{}]处理！ <<{}>>", repeat, unzipId, unzipTimes, zipFileName, entryFileName, extMsg, logSource);
+            logs("{} 解压ID：[{}]，当前unzipTimes为：[{}]，【{}】中的压缩包【{}】解压缩【{}】处理！ <<{}>>", repeat, unzipId, unzipTimes, zipFileName, entryFileName, extMsg, logSource);
         }
     }
 

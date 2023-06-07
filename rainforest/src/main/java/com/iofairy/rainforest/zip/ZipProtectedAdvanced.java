@@ -20,6 +20,7 @@ import com.iofairy.falcon.io.*;
 import com.iofairy.falcon.zip.ArchiveFormat;
 import com.iofairy.lambda.RT3;
 import com.iofairy.lambda.RT4;
+import com.iofairy.rainforest.zip.ac.SuperAC;
 import com.iofairy.rainforest.zip.utils.ZipKit;
 import com.iofairy.rainforest.zip.attr.*;
 import com.iofairy.rainforest.zip.config.PasswordProvider;
@@ -47,7 +48,7 @@ import static com.iofairy.falcon.zip.ArchiveFormat.*;
  * 带密码的解压缩高级方法
  *
  * @since 0.1.0
- * @deprecated Since version 0.2.0, replaced by {@link com.iofairy.rainforest.zip.compress.SuperCompressor}
+ * @deprecated Since version 0.2.0, replaced by {@link SuperAC}
  */
 public class ZipProtectedAdvanced {
 
@@ -277,8 +278,8 @@ public class ZipProtectedAdvanced {
                                          RT3<InputStream, Integer, String, T, Exception> otherAction) throws Exception {
         ZipInputProperty zipInputProperty = (ZipInputProperty) zaConfig.getInputProperty(ZIP);
         PasswordProvider passwordProvider = zaConfig.getPasswordProvider();
-        char[] password = passwordProvider.getInitializedPassword() != null ? passwordProvider.getInitializedPassword() : passwordProvider.getPassword(zipFileName.getZipName());
-        passwordProvider.setInitializedPassword(null);      // 使用完一次，则置为 null，后续都使用文件名来获取密码
+        char[] password = passwordProvider.getReservedPassword() != null ? passwordProvider.getReservedPassword() : passwordProvider.getPassword(zipFileName.getZipName());
+        passwordProvider.setReservedPassword(null);      // 使用完一次，则置为 null，后续都使用文件名来获取密码
 
         ArrayList<T> ts = new ArrayList<>();
         ZipInputStream zipis = null;
@@ -595,8 +596,8 @@ public class ZipProtectedAdvanced {
         ZipInputProperty zipInputProperty = (ZipInputProperty) zaConfig.getInputProperty(ZIP);
         ZipOutputProperty zipOutputProperty = (ZipOutputProperty) zaConfig.getOutputProperty(ZIP);
         PasswordProvider passwordProvider = zaConfig.getPasswordProvider();
-        char[] password = passwordProvider.getInitializedPassword() != null ? passwordProvider.getInitializedPassword() : passwordProvider.getPassword(zipFileName.getZipName());
-        passwordProvider.setInitializedPassword(null);      // 使用完一次，则置为 null，后续都使用文件名来获取密码
+        char[] password = passwordProvider.getReservedPassword() != null ? passwordProvider.getReservedPassword() : passwordProvider.getPassword(zipFileName.getZipName());
+        passwordProvider.setReservedPassword(null);      // 使用完一次，则置为 null，后续都使用文件名来获取密码
         ZipParameters defaultZipParameters = zipOutputProperty.getZipParameters();
 
         ArrayList<T> ts = new ArrayList<>();

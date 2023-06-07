@@ -28,6 +28,7 @@ import static com.iofairy.falcon.zip.ArchiveFormat.*;
  * 解压缩高级类 {@link ZipAdvanced} 的配置
  *
  * @since 0.0.3
+ * @deprecated Since version 0.2.0
  */
 public class ZAConfig {
     /**

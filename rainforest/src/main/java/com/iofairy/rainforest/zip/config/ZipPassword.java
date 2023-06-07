@@ -53,11 +53,9 @@ public class ZipPassword {
     }
 
     public ZipPassword(String fileName, String password) {
-        this.pattern = Pattern.compile(S.isEmpty(fileName) ? ".*" : getRegex(fileName));
-        this.fileName = S.isEmpty(fileName) ? "*" : fileName.replaceAll("(\\*)+", "*");
+        setFileNameAndPattern(fileName);
         this.password = password == null ? null : password.toCharArray();
     }
-
 
     public static ZipPassword of(String password) {
         return new ZipPassword(null, password);
@@ -68,8 +66,7 @@ public class ZipPassword {
     }
 
     public ZipPassword setFileName(String fileName) {
-        this.pattern = Pattern.compile(S.isEmpty(fileName) ? ".*" : getRegex(fileName));
-        this.fileName = S.isEmpty(fileName) ? "*" : fileName.replaceAll("(\\*)+", "*");
+        setFileNameAndPattern(fileName);
         return this;
     }
 
@@ -78,8 +75,12 @@ public class ZipPassword {
         return this;
     }
 
-    private static String getRegex(String fileName) {
+    private void setFileNameAndPattern(String fileName) {
+        this.pattern = Pattern.compile(S.isEmpty(fileName) ? ".*" : getRegex(fileName));
+        this.fileName = S.isEmpty(fileName) ? "*" : fileName.replaceAll("(\\*)+", "*");
+    }
 
+    private static String getRegex(String fileName) {
         String regex = fileName.replaceAll("\\-", "\\\\-")
                 .replaceAll("\\[", "\\\\[")
                 .replaceAll("\\(", "\\\\(")
@@ -93,7 +94,4 @@ public class ZipPassword {
         return regex;
     }
 
-
 }
-
-

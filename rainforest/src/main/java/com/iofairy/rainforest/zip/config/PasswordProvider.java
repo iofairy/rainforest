@@ -35,16 +35,16 @@ public class PasswordProvider {
     private final Map<String, ZipPassword> zipPasswordMap = new ConcurrentHashMap<>();
     private List<ZipPassword> zipPasswordList = new ArrayList<>();
     /**
-     * 初始化密码（输入流获取不到名称时使用）
+     * 预留的备用密码（输入流获取不到名称时使用）
      */
     @Getter
     @Setter
     @Accessors(chain = true)
-    private char[] initializedPassword;
+    private char[] reservedPassword;
 
-    public static PasswordProvider of(char[] initializedPassword, ZipPassword... zipPasswords) {
+    public static PasswordProvider of(char[] reservedPassword, ZipPassword... zipPasswords) {
         PasswordProvider passwordProvider = new PasswordProvider();
-        passwordProvider.initializedPassword = initializedPassword;
+        passwordProvider.reservedPassword = reservedPassword;
         return passwordProvider.addPasswords(zipPasswords);
     }
 
@@ -100,11 +100,21 @@ public class PasswordProvider {
         return this;
     }
 
+    /**
+     * 按文件名对密码排序<br>
+     * 排序规则如下：<br>
+     * 1、文件名不包含通配符，排最前面（排前面意味着比较小），都不包含通配符，视为相等<br>
+     * 2、都包含通配符，则长度长的排前面<br>
+     * 3、都包含通配符且长度相等，则其他字符串排在 ? 和 * 前面， ? 号排在 * 号前面
+     */
     private void sortPasswordPattern() {
         Collection<ZipPassword> zipPasswords = zipPasswordMap.values();
         zipPasswordList = zipPasswords.stream().sorted((zipPassword1, zipPassword2) -> {
             String fileName1 = zipPassword1.getFileName();
             String fileName2 = zipPassword2.getFileName();
+
+            if (fileName1.equals(fileName2)) return 0;
+
             boolean hasWildcard1 = fileName1.contains("*") || fileName1.contains("?");
             boolean hasWildcard2 = fileName2.contains("*") || fileName2.contains("?");
 
@@ -114,7 +124,17 @@ public class PasswordProvider {
 
             if (fileName1.length() != fileName2.length()) return fileName2.length() - fileName1.length();
 
-            return fileName2.compareTo(fileName1);          // 相同长度下，? 排 * 前面
+            // fileName1.length() 等于 fileName2.length()
+            for (int i = 0; i < fileName1.length(); i++) {
+                char c1 = fileName1.charAt(i);
+                char c2 = fileName2.charAt(i);
+
+                if (c1 == c2) continue;                                         // 相等，继续比较下一个字符
+                else if (c1 == '*' || c2 == '*') return c1 == '*' ? 1 : -1;     // 有一个是 *，另一个不是，* 比较大（排后面）
+                else if (c1 == '?' || c2 == '?') return c1 == '?' ? 1 : -1;     // 有一个是 ?，另一个不是，? 比较大（排后面）
+                else return 0;                                                  // 其他情况，直接视为相等
+            }
+            return 0;
         }).collect(Collectors.toList());
     }
 
