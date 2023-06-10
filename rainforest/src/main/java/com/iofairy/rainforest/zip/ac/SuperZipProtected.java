@@ -15,12 +15,7 @@
  */
 package com.iofairy.rainforest.zip.ac;
 
-import com.iofairy.falcon.fs.FileName;
-import com.iofairy.falcon.fs.FilePath;
-import com.iofairy.falcon.fs.PathInfo;
-import com.iofairy.falcon.io.IOs;
-import com.iofairy.falcon.io.MultiByteArrayInputStream;
-import com.iofairy.falcon.io.MultiByteArrayOutputStream;
+import com.iofairy.falcon.io.*;
 import com.iofairy.falcon.zip.ArchiveFormat;
 import com.iofairy.lambda.*;
 import com.iofairy.rainforest.zip.attr.ZipInputProperty;
@@ -176,64 +171,9 @@ public class SuperZipProtected implements SuperAC {
             while ((entry = zipis.getNextEntry()) != null) {
                 String entryFileName = entry.getFileName();
                 if (entry.isDirectory()) continue;
-                /*
-                 * 这里的 entryFileName 已经是文件，而不是目录，目录在上面过滤掉了
-                 */
-                PathInfo pathInfo = FilePath.info(entryFileName);
-                FileName fileName = pathInfo.getFileName();
 
-                ArchiveFormat archiveFormat = ArchiveFormat.of(fileName.ext1);
-                boolean isMultiExtsFormat = ArchiveFormat.isMultiExtsFormat(archiveFormat); // 判断是否是多扩展名的格式
-                // 单扩展名的格式
-                if (!isMultiExtsFormat) archiveFormat = ArchiveFormat.of(fileName.ext);
-
-                SuperAC superAC = unzipACMap.get(archiveFormat);
-
-                if (superAC != null) {
-                    InputStream entryIs = zipis;
-                    if (beforeUnzipFilter != null && beforeUnzipFilter.$(unzipTimes, zipFileName, entryFileName) && beforeUnzipAction != null) {
-                        entryIs = IOs.toMultiBAIS(entryIs);
-
-                        // 打印日志信息
-                        LogPrinter.printBeforeAfter(unzipId, unzipTimes, zipFileName, entryFileName, zipLogLevel, logSource, "前");
-
-                        R r = beforeUnzipAction.$(entryIs, unzipTimes, zipFileName, entryFileName);
-                        rs.add(r);
-                        ((MultiByteArrayInputStream) entryIs).reset();      // 重复利用 MultiByteArrayInputStream，后续还要使用
-                    }
-
-                    if (unzipLevel != 0) {
-                        if (unzipFilter == null || unzipFilter.$(unzipTimes, zipFileName, entryFileName)) {
-                            // 打印日志信息
-                            long startTime = System.currentTimeMillis();
-                            LogPrinter.printBeforeUnzip(unzipId, unzipTimes, zipFileName, entryFileName, zipLogLevel, logSource);
-                            /*
-                             * 解压文件
-                             */
-                            List<R> tmpTs = superAC.unzip(entryIs, entryFileName, newUnzipTimes, newUnzipLevel, false,
-                                    unzipFilter, otherFilter, beforeUnzipFilter, beforeUnzipAction, otherAction, zipLogLevel, unzipACMap);
-                            rs.addAll(tmpTs);
-
-                            // 打印日志信息
-                            LogPrinter.printAfterUnzip(unzipId, unzipTimes, zipFileName, entryFileName, zipLogLevel, logSource, startTime);
-
-                        }
-                    }
-                } else {
-                    if ((otherFilter == null || otherFilter.$(unzipTimes, zipFileName, entryFileName)) && otherAction != null) {
-                        // 打印日志信息
-                        long startTime = System.currentTimeMillis();
-                        LogPrinter.printBeforeOther(unzipId, unzipTimes, zipFileName, entryFileName, zipLogLevel, logSource);
-                        /*
-                         * 文件处理
-                         */
-                        rs.add(otherAction.$(zipis, unzipTimes, zipFileName, entryFileName));
-
-                        // 打印日志信息
-                        LogPrinter.printAfterOther(unzipId, unzipTimes, zipFileName, entryFileName, zipLogLevel, logSource, startTime);
-
-                    }
-                }
+                SuperACs.unzip(zipis, rs, zipFileName, entryFileName, unzipTimes, unzipLevel, newUnzipTimes, newUnzipLevel, unzipACMap,
+                        unzipFilter, otherFilter, beforeUnzipFilter, beforeUnzipAction, otherAction, zipLogLevel, unzipId, logSource);
             }
         } finally {
             if (isCloseStream) {
@@ -362,100 +302,23 @@ public class SuperZipProtected implements SuperAC {
                 }
 
                 try {
-                    MultiByteArrayOutputStream entryBaos = new MultiByteArrayOutputStream();
-                    byte[][] byteArrays;
+                    byte[][] byteArrays = SuperACs.reZip(zipis, rs, zipFileName, entryFileName, unzipTimes, unzipLevel,
+                            newUnzipTimes, newUnzipLevel, reZipACMap, addFileFilter, deleteFileFilter, unzipFilter, otherFilter,
+                            beforeUnzipFilter, afterZipFilter, addFilesAction, addBytesAction, deleteFileAction,
+                            beforeUnzipAction, afterZipAction, otherAction, zipLogLevel, unzipId, logSource);
 
-                    /*
-                     * 这里的 entryFileName 已经是文件，而不是目录，目录在上面过滤掉了
-                     */
-                    PathInfo pathInfo = FilePath.info(entryFileName);
-                    FileName fileName = pathInfo.getFileName();
+                    // 打印日志信息
+                    long startTime = System.currentTimeMillis();
+                    LogPrinter.printBeforeWriteZip(unzipId, unzipTimes, zipFileName, entryFileName, zipLogLevel, logSource);
 
-                    ArchiveFormat archiveFormat = ArchiveFormat.of(fileName.ext1);
-                    boolean isMultiExtsFormat = ArchiveFormat.isMultiExtsFormat(archiveFormat); // 判断是否是多扩展名的格式
-                    // 单扩展名的格式
-                    if (!isMultiExtsFormat) archiveFormat = ArchiveFormat.of(fileName.ext);
-
-                    SuperAC superAC = reZipACMap.get(archiveFormat);
-
-                    if (superAC != null) {
-                        InputStream entryIs = zipis;
-
-                        boolean isRunBeforeUnzipAction = beforeUnzipFilter != null && beforeUnzipFilter.$(unzipTimes, zipFileName, entryFileName) && beforeUnzipAction != null;
-                        boolean isRunAfterZipAction = afterZipFilter != null && afterZipFilter.$(unzipTimes, zipFileName, entryFileName) && afterZipAction != null;
-                        // afterZipAction 没有用到 entryIs
-                        if (isRunBeforeUnzipAction) entryIs = IOs.toMultiBAIS(entryIs);
-
-                        if (isRunBeforeUnzipAction) {
-                            // 打印日志信息
-                            LogPrinter.printBeforeAfter(unzipId, unzipTimes, zipFileName, entryFileName, zipLogLevel, logSource, "前");
-
-                            R r = beforeUnzipAction.$(entryIs, unzipTimes, zipFileName, entryFileName);
-                            rs.add(r);
-                            ((MultiByteArrayInputStream) entryIs).reset();      // 重复利用 MultiByteArrayInputStream，后续还要使用
-                        }
-
-                        if (unzipLevel != 0 && (unzipFilter == null || unzipFilter.$(unzipTimes, zipFileName, entryFileName))) {
-                            // 打印日志信息
-                            long startTime = System.currentTimeMillis();
-                            LogPrinter.printBeforeUnzip(unzipId, unzipTimes, zipFileName, entryFileName, zipLogLevel, logSource);
-                            /*
-                             * 解压并重压缩文件
-                             */
-                            ZipResult<R> zipResult = superAC.reZip(entryIs, entryFileName, newUnzipTimes, newUnzipLevel, false, addFileFilter,
-                                    deleteFileFilter, unzipFilter, otherFilter, beforeUnzipFilter, afterZipFilter, addFilesAction, addBytesAction,
-                                    deleteFileAction, beforeUnzipAction, afterZipAction, otherAction, zipLogLevel, reZipACMap);
-                            rs.addAll(zipResult.getResults());
-                            byteArrays = zipResult.getBytes();
-
-                            // 打印日志信息
-                            LogPrinter.printAfterUnzip(unzipId, unzipTimes, zipFileName, entryFileName, zipLogLevel, logSource, startTime);
-
-                        } else {
-                            // 打印日志信息
-                            LogPrinter.printFilterLogs(unzipId, unzipTimes, zipFileName, entryFileName, zipLogLevel, logSource);
-
-                            IOs.copy(entryIs, entryBaos);
-                            byteArrays = entryBaos.toByteArrays();
-                        }
-
-                        // 这段代码需要放在此处，即使压缩包没有被修改。因为可能 isRunBeforeUnzipAction 为false，有些操作就放在 此处执行
-                        if (isRunAfterZipAction) {
-                            // 打印日志信息
-                            LogPrinter.printBeforeAfter(unzipId, unzipTimes, zipFileName, entryFileName, zipLogLevel, logSource, "后");
-
-                            MultiByteArrayInputStream afterZipIs = new MultiByteArrayInputStream(byteArrays);
-                            R r = afterZipAction.$(afterZipIs, unzipTimes, zipFileName, entryFileName);
-                            rs.add(r);
-                        }
-
-                    } else {
-                        if ((otherFilter == null || otherFilter.$(unzipTimes, zipFileName, entryFileName)) && otherAction != null) {
-                            // 打印日志信息
-                            long startTime = System.currentTimeMillis();
-                            LogPrinter.printBeforeOther(unzipId, unzipTimes, zipFileName, entryFileName, zipLogLevel, logSource);
-
-                            /*
-                             * 文件处理
-                             */
-                            R r = otherAction.$(zipis, entryBaos, unzipTimes, zipFileName, entryFileName);
-                            rs.add(r);
-
-                            // 打印日志信息
-                            LogPrinter.printAfterOther(unzipId, unzipTimes, zipFileName, entryFileName, zipLogLevel, logSource, startTime);
-
-                        } else {
-                            // 打印日志信息
-                            LogPrinter.printFilterLogs(unzipId, unzipTimes, zipFileName, entryFileName, zipLogLevel, logSource);
-
-                            IOs.copy(zipis, entryBaos);
-                        }
-                        byteArrays = entryBaos.toByteArrays();
-                    }
-
+                    long byteLength = 0;
                     for (byte[] bytes : byteArrays) {
+                        byteLength += bytes.length;
                         zos.write(bytes);
                     }
+
+                    // 打印日志信息
+                    LogPrinter.printAfterWriteZip(unzipId, unzipTimes, zipFileName, entryFileName, zipLogLevel, logSource, startTime, byteLength);
 
                 } finally {
                     zos.closeEntry();

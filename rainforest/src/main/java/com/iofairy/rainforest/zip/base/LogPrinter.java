@@ -40,7 +40,7 @@ public class LogPrinter {
 
     public static void printAfterUnzip(String unzipId, String zipFileName, ZipLogLevel zipLogLevel, String logSource, long startTime) {
         if (zipLogLevel.level >= ZipLogLevel.BRIEF.level) {
-            logs("<*<*<*<*<*<*<*<*<*<*<*<*<*<*<*<*<*<*<*< 解压ID：[{}]，压缩包【{}】完成处理！耗时：【{}】 <<{}>>", unzipId, zipFileName, (System.currentTimeMillis() - startTime), logSource);
+            logs("<*<*<*<*<*<*<*<*<*<*<*<*<*<*<*<*<*<*<*< 解压ID：[{}]，压缩包【{}】完成处理！耗时：【{}】 <<{}>>", unzipId, zipFileName, StringKit.convertTime(System.currentTimeMillis() - startTime), logSource);
         }
     }
 
@@ -54,7 +54,21 @@ public class LogPrinter {
     public static void printAfterUnzip(String unzipId, int unzipTimes, String zipFileName, String entryFileName, ZipLogLevel zipLogLevel, String logSource, long startTime) {
         if (zipLogLevel.level >= ZipLogLevel.BRIEF.level) {
             String repeat = StringKit.repeat("<", Math.max(MAX_REPEAT_TIMES - unzipTimes, 1) * REPEAT_FACTOR);
-            logs("{} 解压ID：[{}]，当前unzipTimes为：[{}]，完成解压【{}】中的压缩包【{}】！耗时：【{}】 <<{}>>", repeat, unzipId, unzipTimes, zipFileName, entryFileName, (System.currentTimeMillis() - startTime), logSource);
+            logs("{} 解压ID：[{}]，当前unzipTimes为：[{}]，完成解压【{}】中的压缩包【{}】！耗时：【{}】 <<{}>>", repeat, unzipId, unzipTimes, zipFileName, entryFileName, StringKit.convertTime(System.currentTimeMillis() - startTime), logSource);
+        }
+    }
+
+    public static void printBeforeWriteZip(String unzipId, int unzipTimes, String zipFileName, String entryFileName, ZipLogLevel zipLogLevel, String logSource) {
+        if (zipLogLevel.level >= ZipLogLevel.BRIEF.level) {
+            String repeat = StringKit.repeat("\\", Math.max(MAX_REPEAT_TIMES - unzipTimes, 1) * REPEAT_FACTOR);
+            logs("{} 解压ID：[{}]，当前unzipTimes为：[{}]，正在将文件【{}】写入压缩包【{}】…… <<{}>>", repeat, unzipId, unzipTimes, entryFileName, zipFileName, logSource);
+        }
+    }
+
+    public static void printAfterWriteZip(String unzipId, int unzipTimes, String zipFileName, String entryFileName, ZipLogLevel zipLogLevel, String logSource, long startTime, long byteLength) {
+        if (zipLogLevel.level >= ZipLogLevel.BRIEF.level) {
+            String repeat = StringKit.repeat("/", Math.max(MAX_REPEAT_TIMES - unzipTimes, 1) * REPEAT_FACTOR);
+            logs("{} 解压ID：[{}]，当前unzipTimes为：[{}]，【{}】写入压缩包【{}】完成，写入大小：【{}】！耗时：【{}】 <<{}>>", repeat, unzipId, unzipTimes, entryFileName, zipFileName, StringKit.convertByte(byteLength), StringKit.convertTime(System.currentTimeMillis() - startTime), logSource);
         }
     }
 
@@ -68,7 +82,7 @@ public class LogPrinter {
     public static void printAfterOther(String unzipId, int unzipTimes, String zipFileName, String entryFileName, ZipLogLevel zipLogLevel, String logSource, long startTime) {
         if (zipLogLevel.level >= ZipLogLevel.DETAIL.level) {
             String repeat = StringKit.repeat(")", Math.max(MAX_REPEAT_TIMES - unzipTimes, 1) * REPEAT_FACTOR);
-            logs("{} 解压ID：[{}]，当前unzipTimes为：[{}]，完成处理【{}】中的文件【{}】！耗时：【{}】 <<{}>>", repeat, unzipId, unzipTimes, zipFileName, entryFileName, (System.currentTimeMillis() - startTime), logSource);
+            logs("{} 解压ID：[{}]，当前unzipTimes为：[{}]，完成处理【{}】中的文件【{}】！耗时：【{}】 <<{}>>", repeat, unzipId, unzipTimes, zipFileName, entryFileName, StringKit.convertTime(System.currentTimeMillis() - startTime), logSource);
         }
     }
 

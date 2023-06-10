@@ -15,6 +15,9 @@
  */
 package com.iofairy.rainforest.zip.utils;
 
+import java.math.RoundingMode;
+import java.text.DecimalFormat;
+
 /**
  * 字符串工具类
  *
@@ -36,6 +39,78 @@ public class StringKit {
             throw new IllegalArgumentException("Parameter `repeatTimes` must be <= (Integer.MAX_VALUE - 8), otherwise, the memory will overflow! ");
 
         return new String(new char[repeatTimes]).replace("\0", str);
+    }
+
+    /**
+     * 将字节转成其他大小单位
+     *
+     * @param bytes 字节数
+     * @return 带单位的大小
+     */
+    public static String convertByte(long bytes) {
+        if (bytes < 1024) {
+            return bytes + "B";
+        } else if (bytes < 1048576) {
+            double kb = bytes / 1024.0;
+            DecimalFormat df = new DecimalFormat("0.0");
+            df.setRoundingMode(RoundingMode.HALF_UP);
+            return df.format(kb) + "KB";
+        } else if (bytes < 1073741824) {
+            double mb = bytes / 1048576.0;
+            DecimalFormat df = new DecimalFormat("0.0");
+            df.setRoundingMode(RoundingMode.HALF_UP);
+            return df.format(mb) + "MB";
+        } else if (bytes < 1099511627776L) {
+            double gb = bytes / 1073741824.0;
+            DecimalFormat df = new DecimalFormat("0.0");
+            df.setRoundingMode(RoundingMode.HALF_UP);
+            return df.format(gb) + "GB";
+        } else if (bytes < 1125899906842624L) {
+            double tb = bytes / 1099511627776.0d;
+            DecimalFormat df = new DecimalFormat("0.0");
+            df.setRoundingMode(RoundingMode.HALF_UP);
+            return df.format(tb) + "TB";
+        } else {
+            double pb = bytes / 1125899906842624.0d;
+            DecimalFormat df = new DecimalFormat("0.0");
+            df.setRoundingMode(RoundingMode.HALF_UP);
+            return df.format(pb) + "PB";
+        }
+    }
+
+    /**
+     * 将毫秒转成其他时间单位
+     *
+     * @param millis 毫秒数
+     * @return 带单位的时间
+     */
+    public static String convertTime(long millis) {
+        if (millis < 0) {
+            millis = Math.abs(millis);
+            return "-" + convertTime(millis);
+        } else if (millis < 1000) {
+            return millis + "毫秒";
+        } else if (millis < 60000) {
+            double seconds = millis / 1000.0;
+            DecimalFormat df = new DecimalFormat("0.0");
+            df.setRoundingMode(RoundingMode.HALF_UP);
+            return df.format(seconds) + "秒";
+        } else if (millis < 3600000) {
+            double minutes = millis / 60000.0;
+            DecimalFormat df = new DecimalFormat("0.0");
+            df.setRoundingMode(RoundingMode.HALF_UP);
+            return df.format(minutes) + "分";
+        } else if (millis < 86400000) {
+            double hours = millis / 3600000.0;
+            DecimalFormat df = new DecimalFormat("0.0");
+            df.setRoundingMode(RoundingMode.HALF_UP);
+            return df.format(hours) + "时";
+        } else {
+            double days = millis / 86400000.0;
+            DecimalFormat df = new DecimalFormat("0.0");
+            df.setRoundingMode(RoundingMode.HALF_UP);
+            return df.format(days) + "天";
+        }
     }
 
 }
