@@ -16,7 +16,9 @@
 package com.iofairy.rainforest.zip.attr;
 
 import lombok.Getter;
+import lombok.Setter;
 import lombok.ToString;
+import lombok.experimental.Accessors;
 
 import java.nio.charset.Charset;
 import java.nio.charset.UnsupportedCharsetException;
@@ -37,6 +39,13 @@ public class GzipInputProperty implements ArchiveInputProperty {
      * 文件名编码2
      */
     private String fileNameEncoding2 = "GBK";
+    /**
+     * 如果为真，则一直解压缩直到输入的结尾；
+     * 如果为假，则在第一个.gz流之后停止，并使输入位置指向.gz流之后的下一个字节。
+     */
+    @Setter
+    @Accessors(chain = true)
+    boolean decompressConcatenated = false;
 
     public GzipInputProperty() {
     }

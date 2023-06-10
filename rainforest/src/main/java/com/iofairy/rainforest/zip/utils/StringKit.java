@@ -15,9 +15,6 @@
  */
 package com.iofairy.rainforest.zip.utils;
 
-
-import java.util.Objects;
-
 /**
  * 字符串工具类
  *
@@ -32,9 +29,13 @@ public class StringKit {
      * @return 字符串
      */
     public static String repeat(String str, int repeatTimes) {
-        Objects.requireNonNull(str, "Parameter `str` must be non-null!");
-        if (repeatTimes <= 0) return "";
+        if (str == null) return null;
+        if (str.length() == 0 || repeatTimes <= 0) return "";
+        if (repeatTimes == 1) return str;
+        if (repeatTimes > Integer.MAX_VALUE - 8)
+            throw new IllegalArgumentException("Parameter `repeatTimes` must be <= (Integer.MAX_VALUE - 8), otherwise, the memory will overflow! ");
 
         return new String(new char[repeatTimes]).replace("\0", str);
     }
+
 }

@@ -17,6 +17,7 @@ package com.iofairy.rainforest.zip.attr;
 
 import lombok.Getter;
 import lombok.ToString;
+import org.apache.commons.compress.compressors.gzip.GzipParameters;
 
 import java.nio.charset.Charset;
 import java.nio.charset.UnsupportedCharsetException;
@@ -37,6 +38,8 @@ public class GzipOutputProperty implements ArchiveOutputProperty {
      * 文件名编码2
      */
     private String fileNameEncoding2 = "GBK";
+
+    private GzipParameters gzipParameters = new GzipParameters();
 
     public GzipOutputProperty() {
     }
@@ -59,4 +62,10 @@ public class GzipOutputProperty implements ArchiveOutputProperty {
         return this;
     }
 
+    public GzipOutputProperty setGzipParameters(GzipParameters gzipParameters) {
+        if (gzipParameters != null) {
+            this.gzipParameters = gzipParameters;
+        }
+        return this;
+    }
 }

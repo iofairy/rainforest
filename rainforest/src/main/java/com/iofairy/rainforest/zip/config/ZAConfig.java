@@ -30,6 +30,7 @@ import static com.iofairy.falcon.zip.ArchiveFormat.*;
  * @since 0.0.3
  * @deprecated Since version 0.2.0
  */
+@Deprecated
 public class ZAConfig {
     /**
      * 解压缩高级类 {@link ZipAdvanced} 支持的解压缩格式

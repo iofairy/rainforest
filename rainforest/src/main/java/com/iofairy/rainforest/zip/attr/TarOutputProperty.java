@@ -41,12 +41,6 @@ public class TarOutputProperty implements ArchiveInputProperty {
     @Setter
     @Accessors(chain = true)
     private int blockSize = -511;
-    /**
-     * recordSize must always be 512 bytes
-     */
-    @Setter
-    @Accessors(chain = true)
-    private int recordSize = 512;
 
     public TarOutputProperty() {
     }

@@ -35,7 +35,7 @@ public class SevenZipInputProperty implements ArchiveInputProperty {
      */
     private String fileNameEncoding = "GBK";
     /**
-     * 默认的
+     * 默认的 SevenZFileOptions
      */
     private SevenZFileOptions sevenZFileOptions = SevenZFileOptions.DEFAULT;
 

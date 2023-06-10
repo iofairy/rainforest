@@ -50,6 +50,7 @@ import static com.iofairy.falcon.zip.ArchiveFormat.*;
  * @since 0.1.0
  * @deprecated Since version 0.2.0, replaced by {@link SuperAC}
  */
+@Deprecated
 public class ZipProtectedAdvanced {
 
     /**
