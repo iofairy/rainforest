@@ -6,7 +6,7 @@
 
     <groupId>com.iofairy</groupId>
     <artifactId>rainforest-parent</artifactId>
-    <version>0.2.0</version>
+    <version>0.3.0</version>
     <modules>
         <module>rainforest</module>
         <module>rainforest-tests</module>

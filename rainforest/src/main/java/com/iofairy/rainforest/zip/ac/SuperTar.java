@@ -25,6 +25,7 @@ import com.iofairy.rainforest.zip.base.*;
 import com.iofairy.tcf.Close;
 import com.iofairy.tuple.Tuple2;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.ToString;
 import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
 import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
@@ -39,16 +40,12 @@ import java.util.*;
  * @since 0.2.0
  */
 @Getter
-@ToString(exclude = {"unzipACMap", "reZipACMap"})
-public class SuperTar implements SuperAC {
-    private Map<ArchiveFormat, SuperAC> unzipACMap;
-    private Map<ArchiveFormat, SuperAC> reZipACMap;
+@ToString
+@NoArgsConstructor
+public class SuperTar extends SuperACs {
     private TarInputProperty unTarInputProperty = TarInputProperty.of();
     private TarInputProperty reTarInputProperty = TarInputProperty.of();
     private TarOutputProperty reTarOutputProperty = TarOutputProperty.of();
-
-    public SuperTar() {
-    }
 
     public SuperTar(TarInputProperty unTarInputProperty, TarInputProperty reTarInputProperty, TarOutputProperty reTarOutputProperty) {
         this.unTarInputProperty = unTarInputProperty == null ? TarInputProperty.of() : unTarInputProperty;
@@ -92,14 +89,12 @@ public class SuperTar implements SuperAC {
      * <li><b>方法内部会自动关闭 InputStream 输入流，因为内部会有包装此 InputStream 的其他流需要关闭</b>
      * <li><b>方法内部提供或产生的流都不需要外部调用者关闭，否则可能报错或产生预期之外的结果。只有调用者自己创建的流才需要关闭</b>
      * <li><b>外部调用者不建议调用此实例方法，你应该调用静态方法： {@link SuperAC#unzip(InputStream, ArchiveFormat, String, int, PT3, PT3, PT3, RT4, RT4, ZipLogLevel, List)}</b>
-     * <li><b>{@code isCloseStream} 参数在外部调用时，一定要设置为 {@code true}，方法内部有很多流需要关闭</b>
      * </ul>
      *
      * @param is                输入流
      * @param zipFileName       压缩包文件名
      * @param unzipTimes        压缩包的第几层。最开始的压缩包解压后，里面的文件为第一层，压缩包里的压缩包再解压，则加一层。以此类推……
      * @param unzipLevel        解压层级。-1：无限解压，碰到压缩包就解压；0：只解压<b>当前压缩包</b>，不解压内部压缩包；&gt;=1：对内部压缩包的解压次数
-     * @param isCloseStream     是否关闭流（第一次调用此方法，一定要设置为{@code true}，因为内部会有包装此 InputStream 的其他流需要关闭）
      * @param unzipFilter       内部压缩包的是否解压的过滤器，为{@code null}则<b>都解压</b>， {@code PT3<Integer, String, String, Exception>(压缩包的第几层, 父压缩包的文件名，当前内部文件的名称)}
      * @param otherFilter       除压缩包以外的文件是否处理的过滤器，为{@code null}则<b>都处理</b>， {@code PT3<Integer, String, String, Exception>(压缩包的第几层, 父压缩包的文件名，当前内部文件的名称)}
      * @param beforeUnzipFilter 压缩包解压缩前的Action前的过滤器，为{@code null}则<b>都不处理</b>， {@code PT3<Integer, String, String, Exception>(压缩包的第几层, 父压缩包的文件名，当前内部文件的名称)}
@@ -115,7 +110,6 @@ public class SuperTar implements SuperAC {
                              String zipFileName,
                              final int unzipTimes,
                              final int unzipLevel,
-                             final boolean isCloseStream,
                              PT3<? super Integer, ? super String, ? super String, Exception> unzipFilter,
                              PT3<? super Integer, ? super String, ? super String, Exception> otherFilter,
                              PT3<? super Integer, ? super String, ? super String, Exception> beforeUnzipFilter,
@@ -127,14 +121,14 @@ public class SuperTar implements SuperAC {
         if (zipFileName == null) zipFileName = "";
 
         // >>> 打印日志参数
-        final String unzipId = SuperACs.getUnzipId(5);
+        final String unzipId = getUnzipId(5);
         final String logSource = getClass().getSimpleName() + ".unzip()";
         // <<< 打印日志参数
 
-        ArrayList<R> rs = new ArrayList<>();
+        final ArrayList<R> rs = new ArrayList<>();
         TarArchiveInputStream zipis = null;
         try {
-            if (unzipACMap == null) unzipACMap = SuperACs.toSuperACMap(superACs);
+            if (unzipACMap == null) unzipACMap = toSuperACMap(superACs);
 
             zipis = new TarArchiveInputStream(is, unTarInputProperty.getBlockSize(), unTarInputProperty.getRecordSize(),
                     unTarInputProperty.getFileNameEncoding(), unTarInputProperty.isLenient());
@@ -147,15 +141,13 @@ public class SuperTar implements SuperAC {
                 String entryFileName = entry.getName();
                 if (entry.isDirectory()) continue;
 
-                SuperACs.unzip(zipis, rs, zipFileName, entryFileName, unzipTimes, unzipLevel, newUnzipTimes, newUnzipLevel, unzipACMap,
+                unzip(zipis, rs, zipFileName, entryFileName, unzipTimes, unzipLevel, newUnzipTimes, newUnzipLevel, unzipACMap,
                         unzipFilter, otherFilter, beforeUnzipFilter, beforeUnzipAction, otherAction, zipLogLevel, unzipId, logSource);
 
             }
         } finally {
-            if (isCloseStream) {
-                Close.close(zipis);
-                Close.close(is);
-            }
+            Close.close(zipis);
+            Close.close(is);
         }
         return rs;
     }
@@ -168,14 +160,12 @@ public class SuperTar implements SuperAC {
      * <li><b>方法内部会自动关闭 InputStream 输入流，因为内部会有包装此 InputStream 的其他流需要关闭</b>
      * <li><b>方法内部提供或产生的流都不需要外部调用者关闭，否则可能报错或产生预期之外的结果。只有调用者自己创建的流才需要关闭</b>
      * <li><b>外部调用者不建议调用此实例方法，你应该调用静态方法： {@link SuperAC#reZip(InputStream, ArchiveFormat, String, int, PT2, PT3, PT3, PT3, PT3, PT3, RT2, RT2, RT4, RT4, RT4, RT5, ZipLogLevel, List)} </b>
-     * <li><b>{@code isCloseStream} 参数在外部调用时，一定要设置为 {@code true}，方法内部有很多流需要关闭</b>
      * </ul>
      *
      * @param is                输入流
      * @param zipFileName       压缩包文件名
      * @param unzipTimes        压缩包的第几层。最开始的压缩包解压后，里面的文件为第一层，压缩包里的压缩包再解压，则加一层。以此类推……
      * @param unzipLevel        解压层级。-1：无限解压，碰到压缩包就解压；0：只解压<b>当前压缩包</b>，不解压内部压缩包；&gt;=1：对内部压缩包的解压次数
-     * @param isCloseStream     是否关闭流（第一次调用此方法，一定要设置为{@code true}，因为内部会有包装此 InputStream 的其他流需要关闭）
      * @param addFileFilter     是否添加文件，为{@code null}则<b>不添加文件</b>， {@code PT2<Integer, String, Exception>(压缩包的第几层, 父压缩包的文件名)}
      * @param deleteFileFilter  是否删除该文件，为{@code null}则<b>都不删除</b>， {@code PT3<Integer, String, String, Exception>(压缩包的第几层, 父压缩包的文件名，当前内部文件的名称)}
      * @param unzipFilter       内部压缩包的是否解压的过滤器，为{@code null}则<b>都解压</b>， {@code PT3<Integer, String, String, Exception>(压缩包的第几层, 父压缩包的文件名，当前内部文件的名称)}
@@ -199,7 +189,6 @@ public class SuperTar implements SuperAC {
                                   String zipFileName,
                                   final int unzipTimes,
                                   final int unzipLevel,
-                                  final boolean isCloseStream,
                                   PT2<? super Integer, ? super String, Exception> addFileFilter,
                                   PT3<? super Integer, ? super String, ? super String, Exception> deleteFileFilter,
                                   PT3<? super Integer, ? super String, ? super String, Exception> unzipFilter,
@@ -218,20 +207,21 @@ public class SuperTar implements SuperAC {
         if (zipFileName == null) zipFileName = "";
 
         // >>> 打印日志参数
-        final String unzipId = SuperACs.getUnzipId(5);
+        final String unzipId = getUnzipId(5);
         final String logSource = getClass().getSimpleName() + ".reZip()";
         // <<< 打印日志参数
 
-        ArrayList<R> rs = new ArrayList<>();
+        final ArrayList<R> rs = new ArrayList<>();
         TarArchiveInputStream zipis = null;
-        MultiByteArrayOutputStream baos = new MultiByteArrayOutputStream();
+        MultiByteArrayOutputStream baos = null;
         TarArchiveOutputStream zos = null;
         try {
-            if (reZipACMap == null) reZipACMap = SuperACs.toSuperACMap(superACs);
+            if (reZipACMap == null) reZipACMap = toSuperACMap(superACs);
 
             zipis = new TarArchiveInputStream(is, reTarInputProperty.getBlockSize(), reTarInputProperty.getRecordSize(),
                     reTarInputProperty.getFileNameEncoding(), reTarInputProperty.isLenient());
 
+            baos = new MultiByteArrayOutputStream();
             zos = new TarArchiveOutputStream(baos, reTarOutputProperty.getBlockSize(), reTarOutputProperty.getFileNameEncoding());
 
             final int newUnzipTimes = unzipTimes + 1;
@@ -265,7 +255,7 @@ public class SuperTar implements SuperAC {
                 }
 
 
-                byte[][] byteArrays = SuperACs.reZip(zipis, rs, zipFileName, entryFileName, unzipTimes, unzipLevel,
+                byte[][] byteArrays = reZip(zipis, rs, zipFileName, entryFileName, unzipTimes, unzipLevel,
                         newUnzipTimes, newUnzipLevel, reZipACMap, addFileFilter, deleteFileFilter, unzipFilter, otherFilter,
                         beforeUnzipFilter, afterZipFilter, addFilesAction, addBytesAction, deleteFileAction,
                         beforeUnzipAction, afterZipAction, otherAction, zipLogLevel, unzipId, logSource);
@@ -310,8 +300,8 @@ public class SuperTar implements SuperAC {
 
                                     if (file.isFile()) {
                                         // 自动关闭文件输入流
-                                        try (FileInputStream fis = new FileInputStream(file)) {
-                                            MultiByteArrayOutputStream tmpBAOS = IOs.toMultiBAOS(fis);
+                                        try (FileInputStream fis = new FileInputStream(file);
+                                             MultiByteArrayOutputStream tmpBAOS = IOs.toMultiBAOS(fis)) {
                                             long size = tmpBAOS.size();
                                             byte[][] byteArrays = tmpBAOS.toByteArrays();
 
@@ -368,11 +358,10 @@ public class SuperTar implements SuperAC {
             }
 
         } finally {
-            if (isCloseStream) {
-                Close.close(zipis);
-                Close.close(is);
-            }
+            Close.close(zipis);
+            Close.close(is);
             Close.close(zos);
+            Close.close(baos);
         }
         return ZipResult.of(baos.toByteArrays(), rs);
     }
