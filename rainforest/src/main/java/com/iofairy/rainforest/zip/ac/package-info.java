@@ -19,4 +19,7 @@
  *
  * @since 0.2.0
  */
+@IOFairyPackage
 package com.iofairy.rainforest.zip.ac;
+
+import com.iofairy.annos.IOFairyPackage;
