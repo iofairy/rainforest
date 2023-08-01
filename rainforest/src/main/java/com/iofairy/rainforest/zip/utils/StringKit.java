@@ -24,13 +24,16 @@ import java.text.DecimalFormat;
  * @since 0.2.0
  */
 public class StringKit {
+
     /**
      * 重复字符串指定的次数
      *
      * @param str         字符串
      * @param repeatTimes 次数
      * @return 字符串
+     * @deprecated Since version 0.3.1, replaced by {@link com.iofairy.top.S#repeat(String, int)}
      */
+    @Deprecated
     public static String repeat(String str, int repeatTimes) {
         if (str == null) return null;
         if (str.length() == 0 || repeatTimes <= 0) return "";
@@ -46,7 +49,9 @@ public class StringKit {
      *
      * @param bytes 字节数
      * @return 带单位的大小
+     * @deprecated Since version 0.3.1, replaced by {@link com.iofairy.falcon.unit.Bytes#formatByte(long, boolean)}
      */
+    @Deprecated
     public static String convertByte(long bytes) {
         if (bytes < 1024) {
             return bytes + "B";
@@ -85,32 +90,18 @@ public class StringKit {
      * @return 带单位的时间
      */
     public static String convertTime(long millis) {
-        if (millis < 0) {
-            millis = Math.abs(millis);
-            return "-" + convertTime(millis);
-        } else if (millis < 1000) {
-            return millis + "毫秒";
-        } else if (millis < 60000) {
-            double seconds = millis / 1000.0;
-            DecimalFormat df = new DecimalFormat("0.0");
-            df.setRoundingMode(RoundingMode.HALF_UP);
-            return df.format(seconds) + "秒";
-        } else if (millis < 3600000) {
-            double minutes = millis / 60000.0;
-            DecimalFormat df = new DecimalFormat("0.0");
-            df.setRoundingMode(RoundingMode.HALF_UP);
-            return df.format(minutes) + "分";
-        } else if (millis < 86400000) {
-            double hours = millis / 3600000.0;
-            DecimalFormat df = new DecimalFormat("0.0");
-            df.setRoundingMode(RoundingMode.HALF_UP);
-            return df.format(hours) + "时";
-        } else {
-            double days = millis / 86400000.0;
-            DecimalFormat df = new DecimalFormat("0.0");
-            df.setRoundingMode(RoundingMode.HALF_UP);
-            return df.format(days) + "天";
-        }
+        if (millis < 0) return "-" + convertTime(Math.abs(millis));
+        if (millis < 1000) return millis + "毫秒";
+
+        DecimalFormat df = new DecimalFormat("0.0");
+        df.setRoundingMode(RoundingMode.HALF_UP);
+
+        if (millis < 60000) return df.format(millis / 1000.0) + "秒";
+        if (millis < 3600000) return df.format(millis / 60000.0) + "分";
+        if (millis < 86400000) return df.format(millis / 3600000.0) + "时";
+
+        return df.format(millis / 86400000.0) + "天";
     }
+
 
 }
