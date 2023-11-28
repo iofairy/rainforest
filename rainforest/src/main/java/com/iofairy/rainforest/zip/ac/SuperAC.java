@@ -24,9 +24,7 @@ import com.iofairy.tuple.Tuple2;
 
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Super <b>AC</b> (<b>Archiver</b> and <b>Compressor</b>)<br>
@@ -105,6 +103,83 @@ public interface SuperAC {
             throw new RuntimeException(message, e);
         } finally {
             Close.close(is);
+        }
+
+    }
+
+    /**
+     * 压缩包解压并处理文件<b>（快速自动解压，更节约内存）</b><br>
+     * <br>
+     * <b>注：</b><br>
+     * <ul>
+     * <li><b>方法内部会自动关闭 InputStream 输入流，因为内部会有包装此 InputStream 的其他流需要关闭</b>
+     * <li><b>方法内部提供或产生的流都不需要外部调用者关闭，否则可能报错或产生预期之外的结果。只有调用者自己创建的流才需要关闭</b>
+     * </ul>
+     *
+     * @param is              输入流
+     * @param inputStreamType 输入流是什么类型的压缩包
+     * @param zipFileName     压缩包文件名
+     * @param unzipLevel      解压层级。-1：无限解压，碰到压缩包就解压；0：只解压<b>当前压缩包</b>，不解压内部压缩包；&gt;=1：对内部压缩包的解压次数
+     * @param unzipFilter     内部压缩包的是否解压的过滤器，为{@code null}则<b>都解压</b>， {@code PT3<Integer, String, String, Exception>(压缩包的第几层, 父压缩包的文件名，当前内部文件的名称)}
+     * @param otherFilter     除压缩包以外的文件是否处理的过滤器，为{@code null}则<b>都处理</b>， {@code PT3<Integer, String, String, Exception>(压缩包的第几层, 父压缩包的文件名，当前内部文件的名称)}
+     * @param otherAction     非压缩包的处理逻辑 {@code RT5<InputStream, Integer, String, String, Set<AutoCloseable>, R, Exception>(解压之前文件流, 压缩包的第几层, 父压缩包的文件名，当前内部文件的名称, 外部调用者需要程序自动关闭的资源集合, 返回值)}<br>
+     *                        <u><b>外部调用者需要程序自动关闭的资源集合：</b>外部调用者有自己需要关闭的资源，这些资源通常引用了内部的InputStream，为了避免将内部的InputStream关闭，则需要将InputStream复制一份，再关闭。但这会极大影响性能。
+     *                        为了提高性能，外部调用者可以不必自己关闭资源，将需要关闭的资源添加进{@code Set<AutoCloseable>}，交由程序内部来进行关闭。</u>
+     * @param zipLogLevel     解压缩日志等级
+     * @param superACs        支持哪些类型的压缩/解压处理器（必须包含参数{@code inputStreamType}指定的压缩处理器）
+     * @param <R>             Action返回值类型
+     * @return 返回任意你想返回的内容，便于你在lambda表达式外进行操作
+     * @throws Exception                处理过程可能抛异常
+     * @throws IllegalArgumentException 在 {@code superACs}中未找到与{@code inputStreamType}相匹配 superAC
+     * @since 0.3.2
+     */
+    static <R> List<R> unzipFast(final InputStream is,
+                                 final ArchiveFormat inputStreamType,
+                                 String zipFileName,
+                                 final int unzipLevel,
+                                 PT3<? super Integer, ? super String, ? super String, Exception> unzipFilter,
+                                 PT3<? super Integer, ? super String, ? super String, Exception> otherFilter,
+                                 RT5<InputStream, ? super Integer, ? super String, ? super String, ? super Set<AutoCloseable>, ? extends R, Exception> otherAction,
+                                 ZipLogLevel zipLogLevel,
+                                 List<SuperAC> superACs
+    ) throws Exception {
+        if (zipFileName == null) zipFileName = "";
+
+        String unzipId = SuperACs.getUnzipId(7);
+
+        Set<AutoCloseable> closeables = new LinkedHashSet<>();
+
+
+        try {
+            Tuple2<Map<ArchiveFormat, SuperAC>, SuperAC> tuple = SuperACs.checkParameters(is, inputStreamType, superACs);
+            Map<ArchiveFormat, SuperAC> superACMap = tuple._1;
+            SuperAC superAC = tuple._2;
+
+            /*
+             * 打印日志信息
+             */
+            long startTime = System.currentTimeMillis();
+            String logSource = SuperAC.class.getSimpleName() + ".unzipFast()";
+            LogPrinter.printBeforeUnzip(unzipId, zipFileName, zipLogLevel, logSource);
+            /*
+             * 压缩包处理
+             */
+            List<R> unzip = superAC.unzipFast(is, zipFileName, 1, unzipLevel, unzipFilter,
+                    otherFilter, otherAction, zipLogLevel, superACMap, closeables);
+            /*
+             * 打印日志信息
+             */
+            LogPrinter.printAfterUnzip(unzipId, zipFileName, zipLogLevel, logSource, startTime);
+
+            return unzip;
+        } catch (Exception e) {
+            String message = SI.$("解压ID：[${unzipId}]，unzipFast() 解压【${zipFileName}】异常！", unzipId, zipFileName);
+            throw new RuntimeException(message, e);
+        } finally {
+            closeables.add(is);
+            for (AutoCloseable closeable : closeables) {
+                Close.close(closeable);
+            }
         }
 
     }
@@ -315,6 +390,45 @@ public interface SuperAC {
                       RT4<InputStream, ? super Integer, ? super String, ? super String, ? extends R, Exception> otherAction,
                       ZipLogLevel zipLogLevel,
                       Map<ArchiveFormat, SuperAC> superACs
+    ) throws Exception;
+
+    /**
+     * 压缩包解压并处理文件<b>（快速自动解压，更节约内存）</b><br>
+     * <br>
+     * <b>注：</b><br>
+     * <ul>
+     * <li><b>方法内部会自动关闭 InputStream 输入流，因为内部会有包装此 InputStream 的其他流需要关闭</b>
+     * <li><b>方法内部提供或产生的流都不需要外部调用者关闭，否则可能报错或产生预期之外的结果。只有调用者自己创建的流才需要关闭</b>
+     * <li><b>外部调用者【禁止】调用此实例方法，你应该调用静态方法： {@link SuperAC#unzipFast(InputStream, ArchiveFormat, String, int, PT3, PT3, RT5, ZipLogLevel, List)}</b>
+     * </ul>
+     *
+     * @param is          输入流
+     * @param zipFileName 压缩包文件名
+     * @param unzipTimes  压缩包的第几层。最开始的压缩包解压后，里面的文件为第一层，压缩包里的压缩包再解压，则加一层。以此类推……
+     * @param unzipLevel  解压层级。-1：无限解压，碰到压缩包就解压；0：只解压<b>当前压缩包</b>，不解压内部压缩包；&gt;=1：对内部压缩包的解压次数
+     * @param unzipFilter 内部压缩包的是否解压的过滤器，为{@code null}则<b>都解压</b>， {@code PT3<Integer, String, String, Exception>(压缩包的第几层, 父压缩包的文件名，当前内部文件的名称)}
+     * @param otherFilter 除压缩包以外的文件是否处理的过滤器，为{@code null}则<b>都处理</b>， {@code PT3<Integer, String, String, Exception>(压缩包的第几层, 父压缩包的文件名，当前内部文件的名称)}
+     * @param otherAction 非压缩包的处理逻辑 {@code RT5<InputStream, Integer, String, String, Set<AutoCloseable>, R, Exception>(解压之前文件流, 压缩包的第几层, 父压缩包的文件名，当前内部文件的名称, 外部调用者需要程序自动关闭的资源集合, 返回值)}<br>
+     *                    <u><b>外部调用者需要程序自动关闭的资源集合：</b>外部调用者有自己需要关闭的资源，这些资源通常引用了内部的InputStream，为了避免将内部的InputStream关闭，则需要将InputStream复制一份，再关闭。但这会极大影响性能。
+     *                    为了提高性能，外部调用者可以不必自己关闭资源，将需要关闭的资源添加进{@code Set<AutoCloseable>}，交由程序内部来进行关闭。</u>
+     * @param zipLogLevel 解压缩日志等级
+     * @param superACs    支持哪些类型的压缩/解压处理器（理论上应该传入不可变的Map{@link Collections#unmodifiableMap(Map)}，避免被外部修改）
+     * @param closeables  解压过程涉及到的所有需要关闭的资源
+     * @param <R>         Action返回值类型
+     * @return 返回任意你想返回的内容，便于你在lambda表达式外进行操作
+     * @throws Exception 处理过程可能抛异常
+     * @since 0.3.2
+     */
+    <R> List<R> unzipFast(InputStream is,
+                          String zipFileName,
+                          int unzipTimes,
+                          int unzipLevel,
+                          PT3<? super Integer, ? super String, ? super String, Exception> unzipFilter,
+                          PT3<? super Integer, ? super String, ? super String, Exception> otherFilter,
+                          RT5<InputStream, ? super Integer, ? super String, ? super String, ? super Set<AutoCloseable>, ? extends R, Exception> otherAction,
+                          ZipLogLevel zipLogLevel,
+                          Map<ArchiveFormat, SuperAC> superACs,
+                          Set<AutoCloseable> closeables
     ) throws Exception;
 
 

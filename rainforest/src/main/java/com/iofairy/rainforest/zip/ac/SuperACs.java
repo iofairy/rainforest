@@ -116,6 +116,65 @@ public abstract class SuperACs implements SuperAC {
     }
 
 
+    protected static <R> void unzipFast(InputStream currentIs,
+                                        ArrayList<R> rs,
+                                        String zipFileName,
+                                        String entryFileName,
+                                        int unzipTimes,
+                                        int unzipLevel,
+                                        int newUnzipTimes,
+                                        int newUnzipLevel,
+                                        Map<ArchiveFormat, SuperAC> unzipACMap,
+                                        PT3<? super Integer, ? super String, ? super String, Exception> unzipFilter,
+                                        PT3<? super Integer, ? super String, ? super String, Exception> otherFilter,
+                                        RT5<InputStream, ? super Integer, ? super String, ? super String, ? super Set<AutoCloseable>, ? extends R, Exception> otherAction,
+                                        ZipLogLevel zipLogLevel,
+                                        String unzipId,
+                                        String logSource,
+                                        Set<AutoCloseable> closeables) throws Exception {
+        SuperAC superAC = getSuperAC(entryFileName, unzipACMap);
+
+        if (superAC != null) {
+            if (unzipLevel != 0) {
+                if (unzipFilter == null || unzipFilter.$(unzipTimes, zipFileName, entryFileName)) {
+                    // 打印日志信息
+                    long startTime = System.currentTimeMillis();
+                    LogPrinter.printBeforeUnzip(unzipId, unzipTimes, zipFileName, entryFileName, zipLogLevel, logSource);
+                    /*
+                     * 解压文件
+                     */
+                    List<R> tmpTs = superAC.unzipFast(currentIs, entryFileName, newUnzipTimes, newUnzipLevel,
+                            unzipFilter, otherFilter, otherAction, zipLogLevel, unzipACMap, closeables);
+                    rs.addAll(tmpTs);
+
+                    // 打印日志信息
+                    LogPrinter.printAfterUnzip(unzipId, unzipTimes, zipFileName, entryFileName, zipLogLevel, logSource, startTime);
+
+                }
+            }
+        } else {
+            if ((otherFilter == null || otherFilter.$(unzipTimes, zipFileName, entryFileName)) && otherAction != null) {
+                // 打印日志信息
+                long startTime = System.currentTimeMillis();
+                LogPrinter.printBeforeOther(unzipId, unzipTimes, zipFileName, entryFileName, zipLogLevel, logSource);
+
+                Set<AutoCloseable> tmpCloseables = new LinkedHashSet<>();
+                try {
+                    /*
+                     * 文件处理
+                     */
+                    rs.add(otherAction.$(currentIs, unzipTimes, zipFileName, entryFileName, tmpCloseables));
+                    // 打印日志信息
+                    LogPrinter.printAfterOther(unzipId, unzipTimes, zipFileName, entryFileName, zipLogLevel, logSource, startTime);
+                } finally {
+                    closeables.addAll(tmpCloseables);
+                }
+            }
+        }
+
+    }
+
+
     protected static <R> byte[][] reZip(InputStream currentIs,
                                         ArrayList<R> rs,
                                         String zipFileName,
@@ -295,6 +354,62 @@ public abstract class SuperACs implements SuperAC {
     private static void fillMap(Map<ArchiveFormat, SuperAC> superACMap, ArchiveFormat format1, ArchiveFormat format2) {
         if (superACMap.containsKey(format1) && !superACMap.containsKey(format2)) superACMap.put(format2, superACMap.get(format1));
         else if (superACMap.containsKey(format2) && !superACMap.containsKey(format1)) superACMap.put(format1, superACMap.get(format2));
+    }
+
+    /**
+     * 通过 归档文件格式 获取默认的 SuperAC
+     *
+     * @param archiveFormat 归档文件格式
+     * @return 获取默认的 SuperAC
+     * @since 0.3.2
+     */
+    public static SuperAC getSuperAC(ArchiveFormat archiveFormat) {
+        switch (archiveFormat) {
+            case SEVEN_ZIP:
+                return Super7Zip.of();
+            case BZIP2:
+                return SuperBzip2.of();
+            case GZIP:
+                return SuperGzip.of();
+            case TAR:
+                return SuperTar.of();
+            case TAR_BZ2:
+            case TBZ2:
+                return SuperTarBzip2.of();
+            case TAR_GZ:
+            case TGZ:
+                return SuperTarGzip.of();
+            case TAR_XZ:
+            case TXZ:
+                return SuperTarXz.of();
+            case XZ:
+                return SuperXz.of();
+            case ZIP:
+                return SuperZip.of();
+            default:
+                return null;
+        }
+    }
+
+
+    /**
+     * 获取所有支持的默认的SuperAC实例
+     *
+     * @return 所有支持的默认的SuperAC实例
+     * @since 0.3.2
+     */
+    public static List<SuperAC> allSupportedSuperACs() {
+        List<SuperAC> superACs = new ArrayList<>();
+        superACs.add(Super7Zip.of());
+        superACs.add(SuperBzip2.of());
+        superACs.add(SuperGzip.of());
+        superACs.add(SuperTar.of());
+        superACs.add(SuperTarBzip2.of());
+        superACs.add(SuperTarGzip.of());
+        superACs.add(SuperTarXz.of());
+        superACs.add(SuperXz.of());
+        superACs.add(SuperZip.of());
+        return superACs;
     }
 
 }
