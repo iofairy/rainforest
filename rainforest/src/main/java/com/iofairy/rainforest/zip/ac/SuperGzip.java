@@ -321,7 +321,7 @@ public class SuperGzip extends SuperACs {
     static String fileNameInGzip(GzipCompressorInputStream gcis, String gzipFileName, GzipInputProperty gzipInputProperty) {
         Charset inputFromCharset = Charset.forName(gzipInputProperty.getFileNameEncoding1());
         Charset inputToCharset = Charset.forName(gzipInputProperty.getFileNameEncoding2());
-        String filename = gcis == null ? null : gcis.getMetaData().getFilename();
+        String filename = gcis == null ? null : gcis.getMetaData().getFileName();
         if (G.isEmpty(filename)) {
             return ZipKit.getUncompressedName(gzipFileName, ArchiveFormat.GZIP);
         } else {
@@ -334,7 +334,7 @@ public class SuperGzip extends SuperACs {
         Charset outputToCharset = Charset.forName(gzipOutputProperty.getFileNameEncoding1());
         GzipParameters gzipParameters = gzipOutputProperty.getGzipParameters();
         String fileNameInGzip = new String(entryFileName.getBytes(outputFromCharset), outputToCharset);
-        gzipParameters.setFilename(fileNameInGzip);
+        gzipParameters.setFileName(fileNameInGzip);
         return gzipParameters;
     }
 
