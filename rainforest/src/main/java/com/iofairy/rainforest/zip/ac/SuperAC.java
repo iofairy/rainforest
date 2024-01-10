@@ -177,9 +177,7 @@ public interface SuperAC {
             throw new RuntimeException(message, e);
         } finally {
             closeables.add(is);
-            for (AutoCloseable closeable : closeables) {
-                Close.close(closeable);
-            }
+            Close.closeAll(closeables);
         }
 
     }

@@ -15,8 +15,8 @@
  */
 package com.iofairy.rainforest.zip.base;
 
+import com.iofairy.falcon.string.Strings;
 import com.iofairy.falcon.unit.Bytes;
-import com.iofairy.rainforest.zip.utils.StringKit;
 import com.iofairy.top.S;
 import lombok.extern.slf4j.Slf4j;
 
@@ -42,7 +42,7 @@ public class LogPrinter {
 
     public static void printAfterUnzip(String unzipId, String zipFileName, ZipLogLevel zipLogLevel, String logSource, long startTime) {
         if (zipLogLevel.level >= ZipLogLevel.BRIEF.level) {
-            String timeFormat = StringKit.convertTime(System.currentTimeMillis() - startTime);
+            String timeFormat = Strings.convertTime(System.currentTimeMillis() - startTime);
             logs("<*<*<*<*<*<*<*<*<*<*<*<*<*<*<*<*<*<*<*< 解压ID：[{}]，压缩包【{}】完成处理！耗时：【{}】 <<{}>>", unzipId, zipFileName, timeFormat, logSource);
         }
     }
@@ -57,7 +57,7 @@ public class LogPrinter {
     public static void printAfterUnzip(String unzipId, int unzipTimes, String zipFileName, String entryFileName, ZipLogLevel zipLogLevel, String logSource, long startTime) {
         if (zipLogLevel.level >= ZipLogLevel.BRIEF.level) {
             String repeat = S.repeat("<", Math.max(MAX_REPEAT_TIMES - unzipTimes, 1) * REPEAT_FACTOR);
-            String timeFormat = StringKit.convertTime(System.currentTimeMillis() - startTime);
+            String timeFormat = Strings.convertTime(System.currentTimeMillis() - startTime);
             logs("{} 解压ID：[{}]，当前unzipTimes为：[{}]，完成解压【{}】中的压缩包【{}】！耗时：【{}】 <<{}>>", repeat, unzipId, unzipTimes, zipFileName, entryFileName, timeFormat, logSource);
         }
     }
@@ -73,7 +73,7 @@ public class LogPrinter {
         if (zipLogLevel.level >= ZipLogLevel.BRIEF.level) {
             String repeat = S.repeat("/", Math.max(MAX_REPEAT_TIMES - unzipTimes, 1) * REPEAT_FACTOR);
             String byteFormat = Bytes.ofBs((double) byteLength, true).format();
-            String timeFormat = StringKit.convertTime(System.currentTimeMillis() - startTime);
+            String timeFormat = Strings.convertTime(System.currentTimeMillis() - startTime);
             logs("{} 解压ID：[{}]，当前unzipTimes为：[{}]，【{}】写入压缩包【{}】完成，写入大小：【{}】！耗时：【{}】 <<{}>>", repeat, unzipId, unzipTimes, entryFileName, zipFileName, byteFormat, timeFormat, logSource);
         }
     }
@@ -88,7 +88,7 @@ public class LogPrinter {
     public static void printAfterOther(String unzipId, int unzipTimes, String zipFileName, String entryFileName, ZipLogLevel zipLogLevel, String logSource, long startTime) {
         if (zipLogLevel.level >= ZipLogLevel.DETAIL.level) {
             String repeat = S.repeat(")", Math.max(MAX_REPEAT_TIMES - unzipTimes, 1) * REPEAT_FACTOR);
-            String timeFormat = StringKit.convertTime(System.currentTimeMillis() - startTime);
+            String timeFormat = Strings.convertTime(System.currentTimeMillis() - startTime);
             logs("{} 解压ID：[{}]，当前unzipTimes为：[{}]，完成处理【{}】中的文件【{}】！耗时：【{}】 <<{}>>", repeat, unzipId, unzipTimes, zipFileName, entryFileName, timeFormat, logSource);
         }
     }

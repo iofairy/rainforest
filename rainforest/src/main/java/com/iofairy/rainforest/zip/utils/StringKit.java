@@ -88,7 +88,9 @@ public class StringKit {
      *
      * @param millis 毫秒数
      * @return 带单位的时间
+     * @deprecated Since version 0.3.9, replaced by {@link com.iofairy.falcon.string.Strings#convertTime(long)}
      */
+    @Deprecated
     public static String convertTime(long millis) {
         if (millis < 0) return "-" + convertTime(Math.abs(millis));
         if (millis < 1000) return millis + "毫秒";
