@@ -17,6 +17,7 @@ package com.iofairy.rainforest.zip.attr;
 
 import lombok.Getter;
 import lombok.ToString;
+import org.apache.commons.compress.archivers.sevenz.SevenZFile;
 import org.apache.commons.compress.archivers.sevenz.SevenZFileOptions;
 
 import java.nio.charset.Charset;
@@ -35,8 +36,15 @@ public class SevenZipInputProperty implements ArchiveInputProperty {
      */
     private String fileNameEncoding = "GBK";
     /**
-     * 默认的 SevenZFileOptions
+     * 默认的 SevenZFile.Builder
      */
+    private SevenZFile.Builder sevenZFileBuilder = SevenZFile.builder();
+    /**
+     * 默认的 SevenZFileOptions
+     *
+     * @deprecated 从版本 0.5.0 开始，使用 {@link #sevenZFileBuilder} 替代
+     */
+    @Deprecated
     private SevenZFileOptions sevenZFileOptions = SevenZFileOptions.DEFAULT;
 
     public SevenZipInputProperty() {
@@ -53,9 +61,17 @@ public class SevenZipInputProperty implements ArchiveInputProperty {
         return this;
     }
 
+    @Deprecated
     public SevenZipInputProperty setSevenZFileOptions(SevenZFileOptions sevenZFileOptions) {
         if (sevenZFileOptions != null) {
             this.sevenZFileOptions = sevenZFileOptions;
+        }
+        return this;
+    }
+
+    public SevenZipInputProperty setSevenZFileBuilder(SevenZFile.Builder sevenZFileBuilder) {
+        if (sevenZFileBuilder != null) {
+            this.sevenZFileBuilder = sevenZFileBuilder;
         }
         return this;
     }

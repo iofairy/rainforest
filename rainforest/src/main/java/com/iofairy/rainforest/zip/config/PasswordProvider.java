@@ -34,14 +34,27 @@ import java.util.stream.Collectors;
 public class PasswordProvider {
     private final Map<String, ZipPassword> zipPasswordMap = new ConcurrentHashMap<>();
     private List<ZipPassword> zipPasswordList = new ArrayList<>();
+
     /**
      * 预留的备用密码（输入流获取不到名称时使用）
+     *
+     * @deprecated 从版本 0.5.0 开始，不再使用预留密码，如果设置这个，可能会导致原本压缩包就是不带密码，但是使用此密码设置成压缩包密码
      */
+    @Deprecated
     @Getter
     @Setter
     @Accessors(chain = true)
     private char[] reservedPassword;
 
+    /**
+     * 获取 PasswordProvider
+     *
+     * @param reservedPassword 预留密码
+     * @param zipPasswords     压缩包密码
+     * @return PasswordProvider
+     * @deprecated 从版本 0.5.0 开始，不再使用预留密码。请使用 {@link #of(ZipPassword...)} 构造方法
+     */
+    @Deprecated
     public static PasswordProvider of(char[] reservedPassword, ZipPassword... zipPasswords) {
         PasswordProvider passwordProvider = new PasswordProvider();
         passwordProvider.reservedPassword = reservedPassword;

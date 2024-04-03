@@ -24,7 +24,6 @@ import com.iofairy.falcon.io.MultiByteArrayOutputStream;
 import com.iofairy.falcon.zip.ArchiveFormat;
 import com.iofairy.lambda.*;
 import com.iofairy.rainforest.zip.base.*;
-import com.iofairy.top.G;
 import com.iofairy.tuple.Tuple;
 import com.iofairy.tuple.Tuple2;
 
@@ -33,6 +32,7 @@ import java.io.OutputStream;
 import java.util.*;
 
 import static com.iofairy.falcon.zip.ArchiveFormat.*;
+import static com.iofairy.falcon.misc.Preconditions.*;
 
 /**
  * 接口 {@link SuperAC} 的抽象实现类，用于放置公共方法
@@ -298,7 +298,7 @@ public abstract class SuperACs implements SuperAC {
     }
 
     protected static String getUnzipId(int length) {
-        if (length < 2) throw new IllegalArgumentException("参数`length`必须 >= 2！");
+        checkArgument(length < 2, "参数`length`必须 >= 2！");
 
         final Random random = new Random();
         char[] result = new char[length];
@@ -316,13 +316,12 @@ public abstract class SuperACs implements SuperAC {
     }
 
     static Tuple2<Map<ArchiveFormat, SuperAC>, SuperAC> checkParameters(InputStream is, ArchiveFormat inputStreamType, List<SuperAC> superACs) {
-        if (G.hasNull(is, inputStreamType)) throw new NullPointerException("参数`is`或`inputStreamType`不能为null！");
-        if (G.isEmpty(superACs)) throw new NullPointerException("参数`superACs`不能为null或空！");
+        checkHasNullNPE(args(is, inputStreamType), args("is", "inputStreamType"));
+        checkEmpty(superACs, args("superACs"));
 
         Map<ArchiveFormat, SuperAC> superACMap = toSuperACMap(superACs);
-
         SuperAC superAC = superACMap.get(inputStreamType);
-        if (superAC == null) throw new IllegalArgumentException("在参数`superACs`中未找到与`inputStreamType`相匹配 superAC 对象！");
+        checkArgument(superAC == null, "在参数`superACs`中未找到与`inputStreamType`相匹配 SuperAC 对象！");
 
         return Tuple.of(superACMap, superAC);
     }

@@ -48,9 +48,6 @@ public class Super7Zip extends SuperACs {
     private SevenZipInputProperty reZipInputProperty = SevenZipInputProperty.of();
     private SevenZipOutputProperty reZipOutputProperty = SevenZipOutputProperty.of();
     private PasswordProvider unzipPasswordProvider = PasswordProvider.of();
-    /**
-     * 暂不支持压缩时设置密码
-     */
     private PasswordProvider reZipPasswordProvider = PasswordProvider.of();
 
     public Super7Zip(SevenZipInputProperty unzipInputProperty, SevenZipInputProperty reZipInputProperty,
@@ -147,10 +144,8 @@ public class Super7Zip extends SuperACs {
         final String logSource = getClass().getSimpleName() + ".unzip()";
         // <<< 打印日志参数
 
-        // 应该先按文件名获取密码，因为可能存在 7zip 在其他格式的压缩包中，那么初始化密码就无法使用
+        // 按文件名获取密码
         char[] password = unzipPasswordProvider.getPassword(zipFileName);
-        if (password == null) password = unzipPasswordProvider.getReservedPassword();
-
 
         final ArrayList<R> rs = new ArrayList<>();
 
@@ -160,7 +155,7 @@ public class Super7Zip extends SuperACs {
             if (unzipACMap == null) unzipACMap = toSuperACMap(superACs);
 
             channel = new MemoryHugeBytesChannel(IOs.readBytes(is, false));
-            zipis = new SevenZFile(channel, password, unzipInputProperty.getSevenZFileOptions());
+            zipis = reZipInputProperty.getSevenZFileBuilder().setSeekableByteChannel(channel).setPassword(password).get();
 
             final int newUnzipTimes = unzipTimes + 1;
             final int newUnzipLevel = unzipLevel <= 0 ? unzipLevel : unzipLevel - 1;
@@ -229,10 +224,8 @@ public class Super7Zip extends SuperACs {
         final String logSource = getClass().getSimpleName() + ".unzipFast()";
         // <<< 打印日志参数
 
-        // 应该先按文件名获取密码，因为可能存在 7zip 在其他格式的压缩包中，那么初始化密码就无法使用
+        // 按文件名获取密码
         char[] password = unzipPasswordProvider.getPassword(zipFileName);
-        if (password == null) password = unzipPasswordProvider.getReservedPassword();
-
 
         final ArrayList<R> rs = new ArrayList<>();
 
@@ -242,7 +235,7 @@ public class Super7Zip extends SuperACs {
             if (unzipACMap == null) unzipACMap = toSuperACMap(superACs);
 
             channel = new MemoryHugeBytesChannel(IOs.readBytes(is, false));
-            zipis = new SevenZFile(channel, password, unzipInputProperty.getSevenZFileOptions());
+            zipis = reZipInputProperty.getSevenZFileBuilder().setSeekableByteChannel(channel).setPassword(password).get();
 
             final int newUnzipTimes = unzipTimes + 1;
             final int newUnzipLevel = unzipLevel <= 0 ? unzipLevel : unzipLevel - 1;
@@ -324,6 +317,9 @@ public class Super7Zip extends SuperACs {
         final String logSource = getClass().getSimpleName() + ".reZip()";
         // <<< 打印日志参数
 
+        // 按文件名获取密码
+        char[] password = reZipPasswordProvider.getPassword(zipFileName);
+
         final ArrayList<R> rs = new ArrayList<>();
         MemoryHugeBytesChannel inputChannel = null;
         SevenZFile zipis = null;
@@ -333,10 +329,14 @@ public class Super7Zip extends SuperACs {
             if (reZipACMap == null) reZipACMap = toSuperACMap(superACs);
 
             inputChannel = new MemoryHugeBytesChannel(IOs.readBytes(is, false));
-            zipis = new SevenZFile(inputChannel, reZipInputProperty.getSevenZFileOptions());
+
+            zipis = reZipInputProperty.getSevenZFileBuilder().setSeekableByteChannel(inputChannel).setPassword(password).get();
 
             outputChannel = new MemoryHugeBytesChannel();
-            zos = new SevenZOutputFile(outputChannel);
+            /*
+             * 暂时未找到7zip加密压缩时加密（隐藏）文件名的方法
+             */
+            zos = new SevenZOutputFile(outputChannel, password);
             zos.setContentCompression(reZipOutputProperty.getSevenZMethod());
 
             final int newUnzipTimes = unzipTimes + 1;

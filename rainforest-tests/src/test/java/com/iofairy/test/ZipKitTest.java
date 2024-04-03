@@ -18,13 +18,13 @@ public class ZipKitTest {
             ZipKit.getUncompressedName(null, ArchiveFormat.TAR);
         } catch (Exception e) {
             System.out.println(e.getMessage());
-            assertEquals(e.getMessage(), "参数`fileName`，`archiveFormat`不能为null！");
+            assertEquals(e.getMessage(), "None of these parameters [fileName, archiveFormat] can be null! ");
         }
         try {
             ZipKit.getUncompressedName("a", ArchiveFormat.TAR);
         } catch (Exception e) {
             System.out.println(e.getMessage());
-            assertEquals(e.getMessage(), "参数`archiveFormat`的`archiveTypes`需包含\"ArchiveType.COMPRESSION_ONLY\" 或 `archiveFormat`是[TGZ, TBZ2, TLZ, TXZ, TZST] 这些类型其一！");
+            assertEquals(e.getMessage(), "参数`archiveFormat`的`archiveTypes`需包含\"ArchiveType.COMPRESSION_ONLY\" 或 `archiveFormat`是 [TGZ, TAZ, TZ, TBZ2, TLZ, TXZ, TZST] 这些类型其一！");
         }
         try {
             ZipKit.getUncompressedName("/.bz2", ArchiveFormat.GZIP);
@@ -70,4 +70,5 @@ public class ZipKitTest {
         assertEquals(uncompressedName, "文件.tar");
 
     }
+
 }

@@ -21,6 +21,8 @@ import com.iofairy.rainforest.zip.base.*;
 import com.iofairy.si.SI;
 import com.iofairy.tcf.Close;
 import com.iofairy.tuple.Tuple2;
+import net.lingala.zip4j.exception.ZipException;
+import org.apache.commons.compress.PasswordRequiredException;
 
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -98,8 +100,16 @@ public interface SuperAC {
             LogPrinter.printAfterUnzip(unzipId, zipFileName, zipLogLevel, logSource, startTime);
 
             return unzip;
+        } catch (PasswordRequiredException e) {
+            String message = SI.$("【unzip()】解压时<未找到或未提供对应的密码>或<密码不正确>！！！解压ID：[${unzipId}]，解压文件【${zipFileName}】。", unzipId, zipFileName);
+            throw new RuntimeException(message, e);
         } catch (Exception e) {
-            String message = SI.$("解压ID：[${unzipId}]，unzip() 解压【${zipFileName}】异常！", unzipId, zipFileName);
+            String message;
+            if (e instanceof ZipException && e.getMessage().equals("Wrong password!")) {
+                message = SI.$("【unzip()】解压时<未找到或未提供对应的密码>或<密码不正确>！！！解压ID：[${unzipId}]，解压文件【${zipFileName}】。", unzipId, zipFileName);
+            } else {
+                message = SI.$("【unzip()】解压ID：[${unzipId}]，解压【${zipFileName}】异常！", unzipId, zipFileName);
+            }
             throw new RuntimeException(message, e);
         } finally {
             Close.close(is);
@@ -172,8 +182,16 @@ public interface SuperAC {
             LogPrinter.printAfterUnzip(unzipId, zipFileName, zipLogLevel, logSource, startTime);
 
             return unzip;
+        } catch (PasswordRequiredException e) {
+            String message = SI.$("【unzipFast()】解压时<未找到或未提供对应的密码>或<密码不正确>！！！解压ID：[${unzipId}]，解压文件【${zipFileName}】。", unzipId, zipFileName);
+            throw new RuntimeException(message, e);
         } catch (Exception e) {
-            String message = SI.$("解压ID：[${unzipId}]，unzipFast() 解压【${zipFileName}】异常！", unzipId, zipFileName);
+            String message;
+            if (e instanceof ZipException && e.getMessage().equals("Wrong password!")) {
+                message = SI.$("【unzipFast()】解压时<未找到或未提供对应的密码>或<密码不正确>！！！解压ID：[${unzipId}]，解压文件【${zipFileName}】。", unzipId, zipFileName);
+            } else {
+                message = SI.$("【unzipFast()】解压ID：[${unzipId}]，解压【${zipFileName}】异常！", unzipId, zipFileName);
+            }
             throw new RuntimeException(message, e);
         } finally {
             closeables.add(is);
@@ -342,8 +360,16 @@ public interface SuperAC {
             LogPrinter.printAfterUnzip(unzipId, zipFileName, zipLogLevel, logSource, startTime);
 
             return zipResult;
+        } catch (PasswordRequiredException e) {
+            String message = SI.$("【reZip()】解压时<未找到或未提供对应的密码>或<密码不正确>！！！解压ID：[${unzipId}]，解压文件【${zipFileName}】。", unzipId, zipFileName);
+            throw new RuntimeException(message, e);
         } catch (Exception e) {
-            String message = SI.$("解压ID：[${unzipId}]，reZip() 解压【${zipFileName}】异常！", unzipId, zipFileName);
+            String message;
+            if (e instanceof ZipException && e.getMessage().equals("Wrong password!")) {
+                message = SI.$("【reZip()】解压时<未找到或未提供对应的密码>或<密码不正确>！！！解压ID：[${unzipId}]，解压文件【${zipFileName}】。", unzipId, zipFileName);
+            } else {
+                message = SI.$("【reZip()】解压ID：[${unzipId}]，解压【${zipFileName}】异常！", unzipId, zipFileName);
+            }
             throw new RuntimeException(message, e);
         } finally {
             Close.close(is);

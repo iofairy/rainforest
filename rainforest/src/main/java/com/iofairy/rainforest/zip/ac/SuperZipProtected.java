@@ -145,10 +145,8 @@ public class SuperZipProtected extends SuperACs {
         String logSource = getClass().getSimpleName() + ".unzip()";
         // <<< 打印日志参数
 
-        // 应该先按文件名获取密码，因为可能存在 zip 在其他格式的压缩包中，那么初始化密码就无法使用
+        // 按文件名获取密码
         char[] password = unzipPasswordProvider.getPassword(zipFileName);
-        if (password == null) password = unzipPasswordProvider.getReservedPassword();
-
 
         final ArrayList<R> rs = new ArrayList<>();
         ZipInputStream zipis = null;
@@ -221,10 +219,8 @@ public class SuperZipProtected extends SuperACs {
         String logSource = getClass().getSimpleName() + ".unzipFast()";
         // <<< 打印日志参数
 
-        // 应该先按文件名获取密码，因为可能存在 zip 在其他格式的压缩包中，那么初始化密码就无法使用
+        // 按文件名获取密码
         char[] password = unzipPasswordProvider.getPassword(zipFileName);
-        if (password == null) password = unzipPasswordProvider.getReservedPassword();
-
 
         final ArrayList<R> rs = new ArrayList<>();
         ZipInputStream zipis = null;
@@ -310,9 +306,8 @@ public class SuperZipProtected extends SuperACs {
         String logSource = getClass().getSimpleName() + ".reZip()";
         // <<< 打印日志参数
 
-        // 应该先按文件名获取密码，因为可能存在 zip 在其他格式的压缩包中，那么初始化密码就无法使用
+        // 按文件名获取密码
         char[] password = reZipPasswordProvider.getPassword(zipFileName);
-        if (password == null) password = reZipPasswordProvider.getReservedPassword();
 
         ZipParameters defaultZipParameters = reZipOutputProperty.getZipParameters();
 
