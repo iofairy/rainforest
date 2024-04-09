@@ -16,6 +16,7 @@ import com.iofairy.rainforest.zip.base.ZipLogLevel;
 import com.iofairy.rainforest.zip.base.ZipResult;
 import com.iofairy.rainforest.zip.config.PasswordProvider;
 import com.iofairy.rainforest.zip.config.ZipPassword;
+import com.iofairy.rainforest.zip.error.SuperACException;
 import com.iofairy.top.G;
 import com.iofairy.tuple.Tuple;
 import com.iofairy.tuple.Tuple2;
@@ -28,6 +29,8 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
+
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * @author GG
@@ -319,7 +322,8 @@ public class SuperACTest {
             FileUtil.writeFromStream(multiByteArrayInputStream, dest, true);
             log.info("===============================================================================");
         } catch (Exception e) {
-            System.out.println("\n" + G.stackTrace(e));
+            assertSame(e.getClass(), SuperACException.class);
+            System.out.println("\ntestRezip_WithWrongPassword: \n" + G.stackTrace(e));
         }
     }
 

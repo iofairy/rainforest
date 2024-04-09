@@ -18,6 +18,7 @@ package com.iofairy.rainforest.zip.ac;
 import com.iofairy.falcon.zip.ArchiveFormat;
 import com.iofairy.lambda.*;
 import com.iofairy.rainforest.zip.base.*;
+import com.iofairy.rainforest.zip.error.SuperACException;
 import com.iofairy.si.SI;
 import com.iofairy.tcf.Close;
 import com.iofairy.tuple.Tuple2;
@@ -101,16 +102,15 @@ public interface SuperAC {
 
             return unzip;
         } catch (PasswordRequiredException e) {
-            String message = SI.$("【unzip()】解压时<未找到或未提供对应的密码>或<密码不正确>！！！解压ID：[${unzipId}]，解压文件【${zipFileName}】。", unzipId, zipFileName);
-            throw new RuntimeException(message, e);
+            throw new SuperACException(e, "【unzip()】解压时<未找到或未提供对应的密码>或<密码不正确>！！！解压ID：[${unzipId}]，解压文件【${zipFileName}】。", unzipId, zipFileName);
         } catch (Exception e) {
             String message;
             if (e instanceof ZipException && e.getMessage().equals("Wrong password!")) {
-                message = SI.$("【unzip()】解压时<未找到或未提供对应的密码>或<密码不正确>！！！解压ID：[${unzipId}]，解压文件【${zipFileName}】。", unzipId, zipFileName);
+                message = "【unzip()】解压时<未找到或未提供对应的密码>或<密码不正确>！！！解压ID：[${unzipId}]，解压文件【${zipFileName}】。";
             } else {
-                message = SI.$("【unzip()】解压ID：[${unzipId}]，解压【${zipFileName}】异常！", unzipId, zipFileName);
+                message = "【unzip()】解压ID：[${unzipId}]，解压【${zipFileName}】异常！";
             }
-            throw new RuntimeException(message, e);
+            throw new SuperACException(e, message, unzipId, zipFileName);
         } finally {
             Close.close(is);
         }
@@ -183,16 +183,15 @@ public interface SuperAC {
 
             return unzip;
         } catch (PasswordRequiredException e) {
-            String message = SI.$("【unzipFast()】解压时<未找到或未提供对应的密码>或<密码不正确>！！！解压ID：[${unzipId}]，解压文件【${zipFileName}】。", unzipId, zipFileName);
-            throw new RuntimeException(message, e);
+            throw new SuperACException(e, "【unzipFast()】解压时<未找到或未提供对应的密码>或<密码不正确>！！！解压ID：[${unzipId}]，解压文件【${zipFileName}】。", unzipId, zipFileName);
         } catch (Exception e) {
             String message;
             if (e instanceof ZipException && e.getMessage().equals("Wrong password!")) {
-                message = SI.$("【unzipFast()】解压时<未找到或未提供对应的密码>或<密码不正确>！！！解压ID：[${unzipId}]，解压文件【${zipFileName}】。", unzipId, zipFileName);
+                message = "【unzipFast()】解压时<未找到或未提供对应的密码>或<密码不正确>！！！解压ID：[${unzipId}]，解压文件【${zipFileName}】。";
             } else {
-                message = SI.$("【unzipFast()】解压ID：[${unzipId}]，解压【${zipFileName}】异常！", unzipId, zipFileName);
+                message = "【unzipFast()】解压ID：[${unzipId}]，解压【${zipFileName}】异常！";
             }
-            throw new RuntimeException(message, e);
+            throw new SuperACException(e, message, unzipId, zipFileName);
         } finally {
             closeables.add(is);
             Close.closeAll(closeables);
@@ -361,16 +360,15 @@ public interface SuperAC {
 
             return zipResult;
         } catch (PasswordRequiredException e) {
-            String message = SI.$("【reZip()】解压时<未找到或未提供对应的密码>或<密码不正确>！！！解压ID：[${unzipId}]，解压文件【${zipFileName}】。", unzipId, zipFileName);
-            throw new RuntimeException(message, e);
+            throw new SuperACException(e, "【reZip()】解压时<未找到或未提供对应的密码>或<密码不正确>！！！解压ID：[${unzipId}]，解压文件【${zipFileName}】。", unzipId, zipFileName);
         } catch (Exception e) {
             String message;
             if (e instanceof ZipException && e.getMessage().equals("Wrong password!")) {
-                message = SI.$("【reZip()】解压时<未找到或未提供对应的密码>或<密码不正确>！！！解压ID：[${unzipId}]，解压文件【${zipFileName}】。", unzipId, zipFileName);
+                message = "【reZip()】解压时<未找到或未提供对应的密码>或<密码不正确>！！！解压ID：[${unzipId}]，解压文件【${zipFileName}】。";
             } else {
-                message = SI.$("【reZip()】解压ID：[${unzipId}]，解压【${zipFileName}】异常！", unzipId, zipFileName);
+                message = "【reZip()】解压ID：[${unzipId}]，解压【${zipFileName}】异常！";
             }
-            throw new RuntimeException(message, e);
+            throw new SuperACException(e, message, unzipId, zipFileName);
         } finally {
             Close.close(is);
         }

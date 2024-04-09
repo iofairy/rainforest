@@ -35,6 +35,8 @@ import java.io.*;
 import java.nio.charset.Charset;
 import java.util.*;
 
+import static com.iofairy.falcon.misc.Preconditions.*;
+
 /**
  * 超级ZIP（带密码保护）解压缩与重压缩
  *
@@ -411,7 +413,7 @@ public class SuperZipProtected extends SuperACs {
                                     if (!addFile.isDirectory()) {
                                         File file = addFile.getFile();
                                         Objects.requireNonNull(file, "AddFile实例对象中的成员变量`isDirectory`为false时，`file`不能为null！" + errMsg);
-                                        if (!file.exists()) throw new FileNotFoundException("文件[" + file.getAbsolutePath() + "]不存在。" + errMsg);
+                                        checkFileNotFound(!file.exists(), "文件[${path}]不存在。${errMsg}", file.getAbsolutePath(), errMsg);
 
                                         if (file.isFile()) {
                                             // 自动关闭文件输入流
