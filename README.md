@@ -24,13 +24,13 @@ implementation 'com.iofairy:rainforest:0.5.1'
 
 
 ## 🗺️使用指南（User Guide）
-- [SuperAC（压缩包处理）](#SuperAC压缩包处理)
+- [🔥SuperAC（压缩包处理）](#SuperAC压缩包处理)
   - [unzip（无限解压工具）](#unzip无限解压工具))
   - [unzipFast（快速无限解压工具）](#unzipFast快速无限解压工具)
   - [reZip（无限解压与修改压缩包内容重新压缩）](#reZip无限解压与修改压缩包内容重新压缩)
   - [支持的解压/压缩格式](#支持的解压与压缩格式)
 
-## 📘SuperAC（压缩包处理）
+## 🔥SuperAC（压缩包处理）
 **SuperAC**是Super **Archiver** and **Compressor**的简称。可用于处理复杂的压缩包业务逻辑。  
 + 支持**无限解压**（即压缩包内嵌多层压缩包也能解压）
 + 支持**修改压缩包内（包括嵌套的压缩包）的任意内容并重新打包**成原来格式的压缩包
