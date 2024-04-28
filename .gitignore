@@ -18,3 +18,6 @@ buildNumber.properties
 **/beforeAction/
 **/rezipOutput/
 *.log
+.git.zip
+.git.7z
+.git.rar
