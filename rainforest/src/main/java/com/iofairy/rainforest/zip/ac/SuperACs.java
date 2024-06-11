@@ -24,8 +24,13 @@ import com.iofairy.falcon.io.MultiByteArrayOutputStream;
 import com.iofairy.falcon.zip.ArchiveFormat;
 import com.iofairy.lambda.*;
 import com.iofairy.rainforest.zip.base.*;
+import com.iofairy.top.O;
 import com.iofairy.tuple.Tuple;
 import com.iofairy.tuple.Tuple2;
+import org.apache.commons.compress.archivers.ArchiveEntry;
+import org.apache.commons.compress.archivers.ArchiveOutputStream;
+import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
+import org.apache.commons.compress.archivers.tar.TarArchiveOutputStream;
 
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -409,6 +414,50 @@ public abstract class SuperACs implements SuperAC {
         superACs.add(SuperXz.of());
         superACs.add(SuperZip.of());
         return superACs;
+    }
+
+    /**
+     * 向TAR输出流中写入数据
+     *
+     * @param zos           TarArchiveOutputStream
+     * @param entryFileName entry文件名
+     * @param byteArrays    byte数组
+     * @param entrySize     entry大小
+     * @since 0.5.6
+     */
+    public static void putTarArchiveEntry(TarArchiveOutputStream zos, String entryFileName, byte[][] byteArrays, long entrySize) {
+        Throwable suppressed = null;
+        try {
+            TarArchiveEntry tarArchiveEntry = getTarArchiveEntry(entryFileName, entrySize);
+            zos.putArchiveEntry(tarArchiveEntry);
+            if (byteArrays != null && entrySize != 0) {
+                for (byte[] bytes : byteArrays) {
+                    zos.write(bytes);
+                }
+            }
+        } catch (Throwable e) {
+            suppressed = e;
+            O.sneakyThrows(e);
+        } finally {
+            closeArchiveEntry(zos, suppressed);
+        }
+    }
+
+    public static void closeArchiveEntry(ArchiveOutputStream<? extends ArchiveEntry> zos, Throwable suppressed) {
+        try {
+            zos.closeArchiveEntry();
+        } catch (Throwable e) {
+            if (suppressed != null) {
+                e.addSuppressed(suppressed);
+            }
+            O.sneakyThrows(e);
+        }
+    }
+
+    private static TarArchiveEntry getTarArchiveEntry(String entryFileName, long entrySize) {
+        TarArchiveEntry archiveEntry = new TarArchiveEntry(entryFileName);
+        archiveEntry.setSize(entrySize);
+        return archiveEntry;
     }
 
 }

@@ -22,6 +22,7 @@ import com.iofairy.rainforest.zip.attr.ZipInputProperty;
 import com.iofairy.rainforest.zip.attr.ZipOutputProperty;
 import com.iofairy.rainforest.zip.base.*;
 import com.iofairy.tcf.Close;
+import com.iofairy.top.O;
 import com.iofairy.tuple.Tuple2;
 import lombok.*;
 import org.apache.commons.compress.archivers.ArchiveEntry;
@@ -327,6 +328,7 @@ public class SuperZip extends SuperACs {
                     continue;
                 }
 
+                Throwable suppressed = null;
                 try {
                     byte[][] byteArrays = reZip(zipis, rs, zipFileName, entryFileName, unzipTimes, unzipLevel,
                             newUnzipTimes, newUnzipLevel, reZipACMap, addFileFilter, deleteFileFilter, unzipFilter, otherFilter,
@@ -346,8 +348,11 @@ public class SuperZip extends SuperACs {
                     // 打印日志信息
                     LogPrinter.printAfterWriteZip(unzipId, unzipTimes, zipFileName, entryFileName, zipLogLevel, logSource, startTime, byteLength);
 
+                } catch (Throwable e) {
+                    suppressed = e;
+                    O.sneakyThrows(e);
                 } finally {
-                    zos.closeArchiveEntry();
+                    closeArchiveEntry(zos, suppressed);
                 }
             }
 
@@ -368,6 +373,7 @@ public class SuperZip extends SuperACs {
                                 String entryFileName = addFile.getEntryFileName();
                                 Objects.requireNonNull(entryFileName, "AddFile实例对象中的成员变量`entryFileName`不能为null！" + errMsg);
 
+                                Throwable suppressed = null;
                                 try {
                                     zos.putArchiveEntry(new ZipArchiveEntry(entryFileName));
 
@@ -387,8 +393,11 @@ public class SuperZip extends SuperACs {
                                         }
                                     }
 
+                                } catch (Throwable e) {
+                                    suppressed = e;
+                                    O.sneakyThrows(e);
                                 } finally {
-                                    zos.closeArchiveEntry();
+                                    closeArchiveEntry(zos, suppressed);
                                 }
                             }
                         }
@@ -407,6 +416,7 @@ public class SuperZip extends SuperACs {
                                 String entryFileName = addBytes.getEntryFileName();
                                 Objects.requireNonNull(entryFileName, "AddBytes实例对象中的成员变量`entryFileName`不能为null！" + errMsg);
 
+                                Throwable suppressed = null;
                                 try {
                                     zos.putArchiveEntry(new ZipArchiveEntry(entryFileName));
 
@@ -422,8 +432,11 @@ public class SuperZip extends SuperACs {
                                         }
                                     }
 
+                                } catch (Throwable e) {
+                                    suppressed = e;
+                                    O.sneakyThrows(e);
                                 } finally {
-                                    zos.closeArchiveEntry();
+                                    closeArchiveEntry(zos, suppressed);
                                 }
                             }
                         }

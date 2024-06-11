@@ -19,7 +19,6 @@ import com.iofairy.falcon.zip.ArchiveFormat;
 import com.iofairy.lambda.*;
 import com.iofairy.rainforest.zip.base.*;
 import com.iofairy.rainforest.zip.error.SuperACException;
-import com.iofairy.si.SI;
 import com.iofairy.tcf.Close;
 import com.iofairy.tuple.Tuple2;
 import net.lingala.zip4j.exception.ZipException;
@@ -103,7 +102,7 @@ public interface SuperAC {
             return unzip;
         } catch (PasswordRequiredException e) {
             throw new SuperACException(e, "【unzip()】解压时<未找到或未提供对应的密码>或<密码不正确>！！！解压ID：[${unzipId}]，解压文件【${zipFileName}】。", unzipId, zipFileName);
-        } catch (Exception e) {
+        } catch (Throwable e) {
             String message;
             if (e instanceof ZipException && e.getMessage().equals("Wrong password!")) {
                 message = "【unzip()】解压时<未找到或未提供对应的密码>或<密码不正确>！！！解压ID：[${unzipId}]，解压文件【${zipFileName}】。";
@@ -184,7 +183,7 @@ public interface SuperAC {
             return unzip;
         } catch (PasswordRequiredException e) {
             throw new SuperACException(e, "【unzipFast()】解压时<未找到或未提供对应的密码>或<密码不正确>！！！解压ID：[${unzipId}]，解压文件【${zipFileName}】。", unzipId, zipFileName);
-        } catch (Exception e) {
+        } catch (Throwable e) {
             String message;
             if (e instanceof ZipException && e.getMessage().equals("Wrong password!")) {
                 message = "【unzipFast()】解压时<未找到或未提供对应的密码>或<密码不正确>！！！解压ID：[${unzipId}]，解压文件【${zipFileName}】。";
@@ -361,7 +360,7 @@ public interface SuperAC {
             return zipResult;
         } catch (PasswordRequiredException e) {
             throw new SuperACException(e, "【reZip()】解压时<未找到或未提供对应的密码>或<密码不正确>！！！解压ID：[${unzipId}]，解压文件【${zipFileName}】。", unzipId, zipFileName);
-        } catch (Exception e) {
+        } catch (Throwable e) {
             String message;
             if (e instanceof ZipException && e.getMessage().equals("Wrong password!")) {
                 message = "【reZip()】解压时<未找到或未提供对应的密码>或<密码不正确>！！！解压ID：[${unzipId}]，解压文件【${zipFileName}】。";

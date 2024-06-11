@@ -364,8 +364,7 @@ public class SuperTarGzip extends SuperACs {
                 }
 
                 if (entry.isDirectory()) {
-                    zos.putArchiveEntry(getTarArchiveEntry(entryFileName, entry.getSize()));
-                    zos.closeArchiveEntry();
+                    putTarArchiveEntry(zos, entryFileName, null, entry.getSize());
                     continue;
                 }
 
@@ -423,12 +422,10 @@ public class SuperTarGzip extends SuperACs {
                                             putTarArchiveEntry(zos, entryFileName, byteArrays, size);
                                         }
                                     } else {
-                                        zos.putArchiveEntry(getTarArchiveEntry(entryFileNameWithSlash, 0));
-                                        zos.closeArchiveEntry();
+                                        putTarArchiveEntry(zos, entryFileNameWithSlash, null, 0);
                                     }
                                 } else {
-                                    zos.putArchiveEntry(getTarArchiveEntry(entryFileNameWithSlash, 0));
-                                    zos.closeArchiveEntry();
+                                    putTarArchiveEntry(zos, entryFileNameWithSlash, null, 0);
                                 }
 
                             }
@@ -460,8 +457,7 @@ public class SuperTarGzip extends SuperACs {
                                     long byteLength = Arrays.stream(bytesArray).mapToInt(bs -> bs.length).sum();
                                     putTarArchiveEntry(zos, entryFileName, bytesArray, byteLength);
                                 } else {
-                                    zos.putArchiveEntry(getTarArchiveEntry(entryFileNameWithSlash, 0));
-                                    zos.closeArchiveEntry();
+                                    putTarArchiveEntry(zos, entryFileNameWithSlash, null, 0);
                                 }
 
                             }
@@ -481,23 +477,6 @@ public class SuperTarGzip extends SuperACs {
             Close.close(baos);
         }
         return ZipResult.of(baos.toByteArrays(), rs);
-    }
-
-    private static void putTarArchiveEntry(TarArchiveOutputStream zos, String entryFileName, byte[][] byteArrays, long entrySize) throws IOException {
-        try {
-            zos.putArchiveEntry(getTarArchiveEntry(entryFileName, entrySize));
-            for (byte[] bytes : byteArrays) {
-                zos.write(bytes);
-            }
-        } finally {
-            zos.closeArchiveEntry();
-        }
-    }
-
-    private static TarArchiveEntry getTarArchiveEntry(String entryFileName, long entrySize) {
-        TarArchiveEntry archiveEntry = new TarArchiveEntry(entryFileName);
-        archiveEntry.setSize(entrySize);
-        return archiveEntry;
     }
 
 

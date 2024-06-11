@@ -24,6 +24,7 @@ import com.iofairy.rainforest.zip.attr.SevenZipOutputProperty;
 import com.iofairy.rainforest.zip.base.*;
 import com.iofairy.rainforest.zip.config.PasswordProvider;
 import com.iofairy.tcf.Close;
+import com.iofairy.top.O;
 import com.iofairy.tuple.Tuple2;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -378,6 +379,7 @@ public class Super7Zip extends SuperACs {
                         continue;
                     }
 
+                    Throwable suppressed = null;
                     try {
                         byte[][] byteArrays = reZip(currentIs, rs, zipFileName, entryFileName, unzipTimes, unzipLevel,
                                 newUnzipTimes, newUnzipLevel, reZipACMap, addFileFilter, deleteFileFilter, unzipFilter, otherFilter,
@@ -397,8 +399,11 @@ public class Super7Zip extends SuperACs {
                         // 打印日志信息
                         LogPrinter.printAfterWriteZip(unzipId, unzipTimes, zipFileName, entryFileName, zipLogLevel, logSource, startTime, byteLength);
 
+                    } catch (Throwable e) {
+                        suppressed = e;
+                        O.sneakyThrows(e);
                     } finally {
-                        zos.closeArchiveEntry();
+                        closeSevenZEntry(zos, suppressed);
                     }
                 }
 
@@ -423,6 +428,7 @@ public class Super7Zip extends SuperACs {
                                 String entryFileName = addFile.getEntryFileName();
                                 Objects.requireNonNull(entryFileName, "AddFile实例对象中的成员变量`entryFileName`不能为null！" + errMsg);
 
+                                Throwable suppressed = null;
                                 try {
                                     /*
                                      * entryFileName 如果最后带 /，但 isDirectory() 为 false，会报错
@@ -451,8 +457,11 @@ public class Super7Zip extends SuperACs {
                                         }
                                     }
 
+                                } catch (Throwable e) {
+                                    suppressed = e;
+                                    O.sneakyThrows(e);
                                 } finally {
-                                    zos.closeArchiveEntry();
+                                    closeSevenZEntry(zos, suppressed);
                                 }
                             }
                         }
@@ -471,6 +480,7 @@ public class Super7Zip extends SuperACs {
                                 String entryFileName = addBytes.getEntryFileName();
                                 Objects.requireNonNull(entryFileName, "AddBytes实例对象中的成员变量`entryFileName`不能为null！" + errMsg);
 
+                                Throwable suppressed = null;
                                 try {
                                     /*
                                      * entryFileName 如果最后带 /，但 isDirectory() 为 false，会报错
@@ -492,8 +502,11 @@ public class Super7Zip extends SuperACs {
                                         }
                                     }
 
+                                } catch (Throwable e) {
+                                    suppressed = e;
+                                    O.sneakyThrows(e);
                                 } finally {
-                                    zos.closeArchiveEntry();
+                                    closeSevenZEntry(zos, suppressed);
                                 }
                             }
                         }
@@ -513,5 +526,15 @@ public class Super7Zip extends SuperACs {
         return ZipResult.of(outputChannel.toByteArrays(), rs);
     }
 
+    private static void closeSevenZEntry(SevenZOutputFile zos, Throwable suppressed) {
+        try {
+            zos.closeArchiveEntry();
+        } catch (Throwable e) {
+            if (suppressed != null) {
+                e.addSuppressed(suppressed);
+            }
+            O.sneakyThrows(e);
+        }
+    }
 
 }
