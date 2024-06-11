@@ -16,6 +16,7 @@
 package com.iofairy.rainforest.zip.ac;
 
 import com.iofairy.falcon.io.*;
+import com.iofairy.falcon.time.Stopwatch;
 import com.iofairy.falcon.zip.ArchiveFormat;
 import com.iofairy.lambda.*;
 import com.iofairy.rainforest.zip.attr.Bzip2InputProperty;
@@ -294,7 +295,7 @@ public class SuperBzip2 extends SuperACs {
                     beforeUnzipAction, afterZipAction, otherAction, zipLogLevel, unzipId, logSource);
 
             // 打印日志信息
-            long startTime = System.currentTimeMillis();
+            Stopwatch stopwatch = Stopwatch.run();
             LogPrinter.printBeforeWriteZip(unzipId, unzipTimes, zipFileName, entryFileName, zipLogLevel, logSource);
 
             long byteLength = 0;
@@ -304,7 +305,7 @@ public class SuperBzip2 extends SuperACs {
             }
 
             // 打印日志信息
-            LogPrinter.printAfterWriteZip(unzipId, unzipTimes, zipFileName, entryFileName, zipLogLevel, logSource, startTime, byteLength);
+            LogPrinter.printAfterWriteZip(unzipId, unzipTimes, zipFileName, entryFileName, zipLogLevel, logSource, stopwatch, byteLength);
 
         } finally {
             Close.close(zipis);

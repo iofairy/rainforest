@@ -17,6 +17,7 @@ package com.iofairy.rainforest.zip.ac;
 
 import com.iofairy.falcon.fs.FilePath;
 import com.iofairy.falcon.io.*;
+import com.iofairy.falcon.time.Stopwatch;
 import com.iofairy.falcon.zip.ArchiveFormat;
 import com.iofairy.lambda.*;
 import com.iofairy.rainforest.zip.attr.TarInputProperty;
@@ -336,14 +337,14 @@ public class SuperTar extends SuperACs {
                         beforeUnzipAction, afterZipAction, otherAction, zipLogLevel, unzipId, logSource);
 
                 // 打印日志信息
-                long startTime = System.currentTimeMillis();
+                Stopwatch stopwatch = Stopwatch.run();
                 LogPrinter.printBeforeWriteZip(unzipId, unzipTimes, zipFileName, entryFileName, zipLogLevel, logSource);
 
                 long byteLength = Arrays.stream(byteArrays).mapToInt(bs -> bs.length).sum();
                 putTarArchiveEntry(zos, entryFileName, byteArrays, byteLength);
 
                 // 打印日志信息
-                LogPrinter.printAfterWriteZip(unzipId, unzipTimes, zipFileName, entryFileName, zipLogLevel, logSource, startTime, byteLength);
+                LogPrinter.printAfterWriteZip(unzipId, unzipTimes, zipFileName, entryFileName, zipLogLevel, logSource, stopwatch, byteLength);
 
             }
 

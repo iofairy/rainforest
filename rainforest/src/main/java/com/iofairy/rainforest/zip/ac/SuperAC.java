@@ -15,6 +15,7 @@
  */
 package com.iofairy.rainforest.zip.ac;
 
+import com.iofairy.falcon.time.Stopwatch;
 import com.iofairy.falcon.zip.ArchiveFormat;
 import com.iofairy.lambda.*;
 import com.iofairy.rainforest.zip.base.*;
@@ -86,7 +87,7 @@ public interface SuperAC {
             /*
              * 打印日志信息
              */
-            long startTime = System.currentTimeMillis();
+            Stopwatch stopwatch = Stopwatch.run();
             String logSource = SuperAC.class.getSimpleName() + ".unzip()";
             LogPrinter.printBeforeUnzip(unzipId, zipFileName, zipLogLevel, logSource);
             /*
@@ -97,7 +98,7 @@ public interface SuperAC {
             /*
              * 打印日志信息
              */
-            LogPrinter.printAfterUnzip(unzipId, zipFileName, zipLogLevel, logSource, startTime);
+            LogPrinter.printAfterUnzip(unzipId, zipFileName, zipLogLevel, logSource, stopwatch);
 
             return unzip;
         } catch (PasswordRequiredException e) {
@@ -167,7 +168,7 @@ public interface SuperAC {
             /*
              * 打印日志信息
              */
-            long startTime = System.currentTimeMillis();
+            Stopwatch stopwatch = Stopwatch.run();
             String logSource = SuperAC.class.getSimpleName() + ".unzipFast()";
             LogPrinter.printBeforeUnzip(unzipId, zipFileName, zipLogLevel, logSource);
             /*
@@ -178,7 +179,7 @@ public interface SuperAC {
             /*
              * 打印日志信息
              */
-            LogPrinter.printAfterUnzip(unzipId, zipFileName, zipLogLevel, logSource, startTime);
+            LogPrinter.printAfterUnzip(unzipId, zipFileName, zipLogLevel, logSource, stopwatch);
 
             return unzip;
         } catch (PasswordRequiredException e) {
@@ -344,7 +345,7 @@ public interface SuperAC {
             /*
              * 打印日志信息
              */
-            long startTime = System.currentTimeMillis();
+            Stopwatch stopwatch = Stopwatch.run();
             String logSource = SuperAC.class.getSimpleName() + ".reZip()";
             LogPrinter.printBeforeUnzip(unzipId, zipFileName, zipLogLevel, logSource);
             /*
@@ -355,7 +356,7 @@ public interface SuperAC {
             /*
              * 打印日志信息
              */
-            LogPrinter.printAfterUnzip(unzipId, zipFileName, zipLogLevel, logSource, startTime);
+            LogPrinter.printAfterUnzip(unzipId, zipFileName, zipLogLevel, logSource, stopwatch);
 
             return zipResult;
         } catch (PasswordRequiredException e) {

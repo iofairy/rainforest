@@ -21,6 +21,7 @@ import com.iofairy.falcon.fs.PathInfo;
 import com.iofairy.falcon.io.IOs;
 import com.iofairy.falcon.io.MultiByteArrayInputStream;
 import com.iofairy.falcon.io.MultiByteArrayOutputStream;
+import com.iofairy.falcon.time.Stopwatch;
 import com.iofairy.falcon.zip.ArchiveFormat;
 import com.iofairy.lambda.*;
 import com.iofairy.rainforest.zip.base.*;
@@ -88,7 +89,7 @@ public abstract class SuperACs implements SuperAC {
                 if (unzipLevel != 0) {
                     if (unzipFilter == null || unzipFilter.$(unzipTimes, zipFileName, entryFileName)) {
                         // 打印日志信息
-                        long startTime = System.currentTimeMillis();
+                        Stopwatch stopwatch = Stopwatch.run();
                         LogPrinter.printBeforeUnzip(unzipId, unzipTimes, zipFileName, entryFileName, zipLogLevel, logSource);
                         /*
                          * 解压文件
@@ -98,7 +99,7 @@ public abstract class SuperACs implements SuperAC {
                         rs.addAll(tmpTs);
 
                         // 打印日志信息
-                        LogPrinter.printAfterUnzip(unzipId, unzipTimes, zipFileName, entryFileName, zipLogLevel, logSource, startTime);
+                        LogPrinter.printAfterUnzip(unzipId, unzipTimes, zipFileName, entryFileName, zipLogLevel, logSource, stopwatch);
 
                     }
                 }
@@ -106,14 +107,14 @@ public abstract class SuperACs implements SuperAC {
         } else {
             if ((otherFilter == null || otherFilter.$(unzipTimes, zipFileName, entryFileName)) && otherAction != null) {
                 // 打印日志信息
-                long startTime = System.currentTimeMillis();
+                Stopwatch stopwatch = Stopwatch.run();
                 LogPrinter.printBeforeOther(unzipId, unzipTimes, zipFileName, entryFileName, zipLogLevel, logSource);
                 /*
                  * 文件处理
                  */
                 rs.add(otherAction.$(currentIs, unzipTimes, zipFileName, entryFileName));
                 // 打印日志信息
-                LogPrinter.printAfterOther(unzipId, unzipTimes, zipFileName, entryFileName, zipLogLevel, logSource, startTime);
+                LogPrinter.printAfterOther(unzipId, unzipTimes, zipFileName, entryFileName, zipLogLevel, logSource, stopwatch);
 
             }
         }
@@ -143,7 +144,7 @@ public abstract class SuperACs implements SuperAC {
             if (unzipLevel != 0) {
                 if (unzipFilter == null || unzipFilter.$(unzipTimes, zipFileName, entryFileName)) {
                     // 打印日志信息
-                    long startTime = System.currentTimeMillis();
+                    Stopwatch stopwatch = Stopwatch.run();
                     LogPrinter.printBeforeUnzip(unzipId, unzipTimes, zipFileName, entryFileName, zipLogLevel, logSource);
                     /*
                      * 解压文件
@@ -153,14 +154,14 @@ public abstract class SuperACs implements SuperAC {
                     rs.addAll(tmpTs);
 
                     // 打印日志信息
-                    LogPrinter.printAfterUnzip(unzipId, unzipTimes, zipFileName, entryFileName, zipLogLevel, logSource, startTime);
+                    LogPrinter.printAfterUnzip(unzipId, unzipTimes, zipFileName, entryFileName, zipLogLevel, logSource, stopwatch);
 
                 }
             }
         } else {
             if ((otherFilter == null || otherFilter.$(unzipTimes, zipFileName, entryFileName)) && otherAction != null) {
                 // 打印日志信息
-                long startTime = System.currentTimeMillis();
+                Stopwatch stopwatch = Stopwatch.run();
                 LogPrinter.printBeforeOther(unzipId, unzipTimes, zipFileName, entryFileName, zipLogLevel, logSource);
 
                 Set<AutoCloseable> tmpCloseables = new LinkedHashSet<>();
@@ -170,7 +171,7 @@ public abstract class SuperACs implements SuperAC {
                      */
                     rs.add(otherAction.$(currentIs, unzipTimes, zipFileName, entryFileName, tmpCloseables));
                     // 打印日志信息
-                    LogPrinter.printAfterOther(unzipId, unzipTimes, zipFileName, entryFileName, zipLogLevel, logSource, startTime);
+                    LogPrinter.printAfterOther(unzipId, unzipTimes, zipFileName, entryFileName, zipLogLevel, logSource, stopwatch);
                 } finally {
                     closeables.addAll(tmpCloseables);
                 }
@@ -227,7 +228,7 @@ public abstract class SuperACs implements SuperAC {
 
                     if (unzipLevel != 0 && (unzipFilter == null || unzipFilter.$(unzipTimes, zipFileName, entryFileName))) {
                         // 打印日志信息
-                        long startTime = System.currentTimeMillis();
+                        Stopwatch stopwatch = Stopwatch.run();
                         LogPrinter.printBeforeUnzip(unzipId, unzipTimes, zipFileName, entryFileName, zipLogLevel, logSource);
                         /*
                          * 解压并重压缩文件
@@ -239,7 +240,7 @@ public abstract class SuperACs implements SuperAC {
                         byteArrays = zipResult.getBytes();
 
                         // 打印日志信息
-                        LogPrinter.printAfterUnzip(unzipId, unzipTimes, zipFileName, entryFileName, zipLogLevel, logSource, startTime);
+                        LogPrinter.printAfterUnzip(unzipId, unzipTimes, zipFileName, entryFileName, zipLogLevel, logSource, stopwatch);
 
                     } else {
                         // 打印日志信息
@@ -263,7 +264,7 @@ public abstract class SuperACs implements SuperAC {
             } else {
                 if ((otherFilter == null || otherFilter.$(unzipTimes, zipFileName, entryFileName)) && otherAction != null) {
                     // 打印日志信息
-                    long startTime = System.currentTimeMillis();
+                    Stopwatch stopwatch = Stopwatch.run();
                     LogPrinter.printBeforeOther(unzipId, unzipTimes, zipFileName, entryFileName, zipLogLevel, logSource);
 
                     /*
@@ -273,7 +274,7 @@ public abstract class SuperACs implements SuperAC {
                     rs.add(r);
 
                     // 打印日志信息
-                    LogPrinter.printAfterOther(unzipId, unzipTimes, zipFileName, entryFileName, zipLogLevel, logSource, startTime);
+                    LogPrinter.printAfterOther(unzipId, unzipTimes, zipFileName, entryFileName, zipLogLevel, logSource, stopwatch);
 
                 } else {
                     // 打印日志信息
