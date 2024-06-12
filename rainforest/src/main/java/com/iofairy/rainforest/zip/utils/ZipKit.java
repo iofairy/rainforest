@@ -17,19 +17,11 @@ package com.iofairy.rainforest.zip.utils;
 
 import com.iofairy.falcon.fs.FileName;
 import com.iofairy.falcon.fs.FilePath;
-import com.iofairy.falcon.io.IOs;
-import com.iofairy.falcon.io.MultiByteArrayOutputStream;
 import com.iofairy.falcon.zip.ArchiveFormat;
 import com.iofairy.falcon.zip.ArchiveType;
-import com.iofairy.tcf.Close;
-import com.iofairy.top.G;
-import org.apache.commons.compress.compressors.gzip.*;
 
-import java.io.InputStream;
-import java.nio.charset.Charset;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Objects;
 
 import static com.iofairy.falcon.zip.ArchiveFormat.*;
 import static com.iofairy.falcon.misc.Preconditions.*;
@@ -55,7 +47,7 @@ public class ZipKit {
         boolean isContains = archiveFormats.contains(archiveFormat);
 
         checkArgument(!(archiveFormat.archiveTypes.contains(ArchiveType.COMPRESSION_ONLY) || isContains),
-                "参数`archiveFormat`的`archiveTypes`需包含\"ArchiveType.COMPRESSION_ONLY\" 或 `archiveFormat`是 ${…} 这些类型其一！",archiveFormats);
+                "参数`archiveFormat`的`archiveTypes`需包含\"ArchiveType.COMPRESSION_ONLY\" 或 `archiveFormat`是 ${…} 这些类型其一！", archiveFormats);
 
         String extName = archiveFormat.extName;
         checkArgument(!fileName.endsWith(extName), "当前`fileName`必须以[${…}]为后缀，当前fileName为：${…}", extName, fileName);
@@ -65,57 +57,6 @@ public class ZipKit {
 
         String fileNameInZip = fn.name.substring(0, fn.name.length() - extName.length());
         return isContains ? fileNameInZip + ".tar" : fileNameInZip;
-    }
-
-    /**
-     * 获取gzip中的文件名称。
-     *
-     * @param gcis         GzipCompressorInputStream流
-     * @param gzipFileName gzip包的名称，如：<code>gzip包.csv.gz</code>，则内部的文件名为：<code>gzip包.csv</code>
-     * @param fromCharset  gzip包的文件名编码，一般为：ISO-8859-1
-     * @param toCharset    gzip包的文件名编码，一般为：GBK
-     * @return gzip内部文件名
-     * @deprecated Since version 0.2.0, replaced by {@link #getUncompressedName(String, ArchiveFormat)}
-     */
-    @Deprecated
-    public static String fileNameInGzip(GzipCompressorInputStream gcis, String gzipFileName, Charset fromCharset, Charset toCharset) {
-        if (gcis == null && G.isEmpty(gzipFileName)) throw new NullPointerException("参数 gcis 与 gzipFileName 不能都为 null！");
-        String filename = gcis == null ? null : gcis.getMetaData().getFilename();
-        if (G.isEmpty(filename)) {
-            Objects.requireNonNull(gzipFileName, "参数 gzipFileName 不能都为 null！");
-            String newGzipFileName = FilePath.info(gzipFileName).getFileName().name;
-            return GzipUtils.getUncompressedFilename(newGzipFileName);
-        } else {
-            return new String(filename.getBytes(fromCharset), toCharset);
-        }
-    }
-
-    /**
-     * gzip压缩输入流，并转为 byte数组返回<br>
-     * <b>注：此处 InputStream 输入流不能关闭，调用此方法的地方还会继续使用</b>
-     *
-     * @param in          输入流
-     * @param fileName    压缩成gzip后，其内部的文件名
-     * @param fromCharset gzip包的文件名编码，一般为：GBK
-     * @param toCharset   gzip包的文件名编码，一般为：ISO-8859-1
-     * @return gzip压缩的 byte数组
-     * @throws Exception 处理过程可能抛异常
-     * @deprecated Since version 0.2.0
-     */
-    @Deprecated
-    public static byte[][] gzip(InputStream in, String fileName, Charset fromCharset, Charset toCharset) throws Exception {
-        final MultiByteArrayOutputStream bos = new MultiByteArrayOutputStream();
-        GzipCompressorOutputStream gcos = null;
-        try {
-            GzipParameters gzipParameters = new GzipParameters();
-            gzipParameters.setFilename(new String(fileName.getBytes(fromCharset), toCharset));
-            gcos = new GzipCompressorOutputStream(bos, gzipParameters);
-            IOs.copy(in, gcos);
-        } finally {
-            Close.close(gcos);
-        }
-        // 返回必须在关闭gos后进行，因为关闭时会自动执行finish()方法，保证数据全部写出
-        return bos.toByteArrays();
     }
 
 }

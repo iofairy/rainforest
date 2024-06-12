@@ -10,10 +10,7 @@ import com.iofairy.rainforest.zip.ac.Super7Zip;
 import com.iofairy.rainforest.zip.ac.SuperAC;
 import com.iofairy.rainforest.zip.ac.SuperACs;
 import com.iofairy.rainforest.zip.ac.SuperZipProtected;
-import com.iofairy.rainforest.zip.base.AddBytes;
-import com.iofairy.rainforest.zip.base.AddFile;
-import com.iofairy.rainforest.zip.base.ZipLogLevel;
-import com.iofairy.rainforest.zip.base.ZipResult;
+import com.iofairy.rainforest.zip.base.*;
 import com.iofairy.rainforest.zip.config.PasswordProvider;
 import com.iofairy.rainforest.zip.config.ZipPassword;
 import com.iofairy.rainforest.zip.error.SuperACException;
@@ -22,6 +19,7 @@ import com.iofairy.tuple.Tuple;
 import com.iofairy.tuple.Tuple2;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
+import org.slf4j.bridge.SLF4JBridgeHandler;
 
 import java.io.*;
 import java.util.ArrayList;
@@ -54,6 +52,12 @@ public class SuperACTest {
         FileUtil.mkdir(rezipOutputDir);
         FileUtil.mkdir(afterActionDir);
         FileUtil.mkdir(beforeActionDir);
+
+        /*
+         JUL 转 logback
+         */
+        SLF4JBridgeHandler.removeHandlersForRootLogger();
+        SLF4JBridgeHandler.install();
     }
 
 
@@ -68,7 +72,7 @@ public class SuperACTest {
             ZipResult<String> zipResult = SuperAC.reZip(
                     is,
                     ArchiveFormat.TAR_BZ2,
-                    null,
+                    zipFileName,
                     -1,
                     (times, zipName) -> true,
                     (times, zipName, entryName) -> entryName.startsWith("要删除的" + times),
@@ -280,11 +284,13 @@ public class SuperACTest {
         SuperZipProtected superZipProtected = SuperZipProtected.of().setReZipPasswordProvider(provider);
         Super7Zip super7Zip = Super7Zip.of().setReZipPasswordProvider(provider);
 
-        try (FileInputStream is = new FileInputStream(new File(zipDir, "7zip密码、zip密码、7zip密码.7z"))) {
+        String zipFileName = "7zip密码、zip密码、7zip密码.7z";
+
+        try (FileInputStream is = new FileInputStream(new File(zipDir, zipFileName))) {
             ZipResult<String> zipResult = SuperAC.reZip(
                     is,
                     ArchiveFormat.SEVEN_ZIP,
-                    "7zip密码、zip密码、7zip密码.7z",
+                    zipFileName,
                     -1,
                     (times, zipName) -> true,
                     (times, zipName, entryName) -> entryName.startsWith("要删除的" + times),
@@ -448,7 +454,7 @@ public class SuperACTest {
             List<Tuple2<String, Long>> result = SuperAC.unzip(
                     is,
                     ArchiveFormat.ZIP,                     // 压缩包的类型
-                    null,                                      // 压缩包名称
+                    zipFileName,                                      // 压缩包名称
                     -1,                                                 // 解压几层，-1则无限解压
                     (times, zipName, entryName) -> true,                // 压缩包内部的压缩包是否解压
                     (times, zipName, entryName) -> entryName.endsWith(".csv"),    // 非压缩包中，只处理 .csv 的文件
