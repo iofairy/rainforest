@@ -353,10 +353,17 @@ public interface SuperAC {
              */
             ZipResult<R> zipResult = superAC.reZip(is, zipFileName, 1, unzipLevel, addFileFilter, deleteFileFilter, unzipFilter, otherFilter, beforeUnzipFilter,
                     afterZipFilter, addFilesAction, addBytesAction, deleteFileAction, beforeUnzipAction, afterZipAction, otherAction, zipLogLevel, superACMap);
+
+            long byteLength = 0;
+            if (zipResult.getBytes() != null) {
+                for (byte[] bytes : zipResult.getBytes()) {
+                    byteLength += bytes.length;
+                }
+            }
             /*
              * 打印日志信息
              */
-            LogPrinter.printAfterUnzip(unzipId, zipFileName, zipLogLevel, logSource, stopwatch);
+            LogPrinter.printAfterReZip(unzipId, zipFileName, zipLogLevel, logSource, stopwatch, byteLength);
 
             return zipResult;
         } catch (PasswordRequiredException e) {

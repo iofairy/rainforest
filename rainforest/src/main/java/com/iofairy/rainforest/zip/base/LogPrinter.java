@@ -46,6 +46,13 @@ public class LogPrinter {
         }
     }
 
+    public static void printAfterReZip(String unzipId, String zipFileName, ZipLogLevel zipLogLevel, String logSource, Stopwatch stopwatch, long byteLength) {
+        if (zipLogLevel.level >= ZipLogLevel.BRIEF.level) {
+            String byteFormat = Bytes.ofBs((double) byteLength, true).format();
+            logs("<*<*<*<*<*<*<*<*<*<*<*<*<*<*<*<*<*<*<*< 解压ID：[{}]，压缩包【{}】完成处理，重压缩后大小：【{}】！耗时：【{}】 <<{}>>", unzipId, zipFileName, byteFormat, stopwatch, logSource);
+        }
+    }
+
     public static void printBeforeUnzip(String unzipId, int unzipTimes, String zipFileName, String entryFileName, ZipLogLevel zipLogLevel, String logSource) {
         if (zipLogLevel.level >= ZipLogLevel.BRIEF.level) {
             String repeat = S.repeat(">", Math.max(MAX_REPEAT_TIMES - unzipTimes, 1) * REPEAT_FACTOR);
