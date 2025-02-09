@@ -161,6 +161,106 @@ public class SuperACTest {
         }
     }
 
+    /**
+     * Zstd混合压缩包测试
+     */
+    @Test
+    void testRezipZstd() {
+        String zipFileName = "Zstd测试.7z";
+
+        try (FileInputStream is = new FileInputStream(new File(zipDir, zipFileName))) {
+            ZipResult<String> zipResult = SuperAC.reZip(
+                    is,
+                    ArchiveFormat.SEVEN_ZIP,
+                    zipFileName,
+                    -1,
+                    (times, zipName) -> true,
+                    (times, zipName, entryName) -> entryName.startsWith("要删除的" + times),
+                    null,
+                    (times, zipName, entryName) -> entryName.endsWith("csv"),
+                    null,
+                    (times, zipName, entryName) -> true,
+                    /*
+                     设置要往压缩包中添加的文件，如果没有，直接设置为 null
+                     */
+                    (times, zipName) -> {
+                        List<File> files = Arrays.asList(new File(zipDir, "add-files/++新建 DOCX 文档 - 副本.docx"));
+                        List<AddFile> addFiles = files.stream().map(e -> AddFile.of(e, "添加的文件/" + e.getName(), e.isDirectory())).collect(Collectors.toList());
+                        addFiles.add(AddFile.of(null, "添加的目录/", true));
+
+                        List<String> returnList = files.stream().map(e -> e.getName()).collect(Collectors.toList());
+                        return Tuple.of(addFiles, returnList);
+                    },
+                    /*
+                     设置要往压缩包中添加的字节，如果没有，直接设置为 null
+                     */
+                    (times, zipName) -> {
+                        ArrayList<AddBytes> addBytes = new ArrayList<>();
+                        try (FileInputStream fis1 = new FileInputStream(new File(zipDir, "add-files/++新建 文本文档.txt"));
+                             FileInputStream fis2 = new FileInputStream(new File(zipDir, "add-files/++新建 DOCX 文档.docx"));
+                        ) {
+                            byte[][] bytes1 = IOs.toMultiBAOS(fis1).toByteArrays();
+                            byte[][] bytes2 = IOs.toMultiBAOS(fis2).toByteArrays();
+                            AddBytes addBytes1 = AddBytes.of(bytes1, "添加字节/++新建 文本文档.txt", false);
+                            AddBytes addBytes2 = AddBytes.of(bytes2, "添加字节/++新建 DOCX 文档.docx", false);
+                            addBytes.add(addBytes1);
+                            addBytes.add(addBytes2);
+                        }
+
+                        /*
+                         是目录，带 /    --------- 这个被当作目录
+                         */
+                        AddBytes addBytes1 = AddBytes.of(null, "AddBytes添加的目录1/", true);
+                        // 是目录，不带 /   --------- 这个被当作 0 字节的文件
+                        AddBytes addBytes2 = AddBytes.of(null, "AddBytes添加的目录2", true);
+                        /*
+                         不是目录，带 /，字节为0      --------- 这个被当作目录
+                         */
+                        AddBytes addBytes3 = AddBytes.of(new byte[0][], "AddBytes添加的目录3/", false);
+                        // 不是目录，不带 /，但字节为0      --------- 这个被当作 0 字节的文件
+                        AddBytes addBytes4 = AddBytes.of(new byte[0][], "AddBytes添加的目录4", false);
+
+                        addBytes.add(addBytes1);
+                        addBytes.add(addBytes2);
+                        addBytes.add(addBytes3);
+                        addBytes.add(addBytes4);
+
+                        List<String> returnList = addBytes.stream().map(e -> e.getEntryFileName()).collect(Collectors.toList());
+                        return Tuple.of(addBytes, returnList);
+                    },
+                    null,
+                    null,
+                    null,
+                    (input, output, times, zipName, entryName) -> {
+                        System.out.println("处理其他文件：" + zipName + "---" + entryName);
+
+                        IOs.copy(input, output);
+                        output.write(("\n" + DateTime.nowDate() + ">>>>>>>这是这是新增加的一行\n").getBytes());
+
+                        return "其他文件处理：" + entryName;
+                    },
+                    ZipLogLevel.DETAIL,
+                    SuperACs.allSupportedSuperACs()
+            );
+
+            List<String> results = zipResult.getResults();
+            log.info("===============================================================================");
+            System.out.println(results);
+
+            byte[][] bytes = zipResult.getBytes();
+            String outputFilename = "重压缩输出_" + Numbers.randomInt(4) + ".7z";
+            log.info("输出的文件名：{}", outputFilename);
+            File dest = new File(rezipOutputDir, outputFilename);
+
+            MultiByteArrayInputStream multiByteArrayInputStream = new MultiByteArrayInputStream(bytes);
+            FileUtil.writeFromStream(multiByteArrayInputStream, dest, true);
+
+            log.info("===============================================================================");
+        } catch (Exception e) {
+            System.out.println("\n" + G.stackTrace(e));
+        }
+    }
+
 
     /**
      * 带密码的测试

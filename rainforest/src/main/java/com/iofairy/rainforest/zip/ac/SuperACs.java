@@ -15,6 +15,8 @@
  */
 package com.iofairy.rainforest.zip.ac;
 
+import com.github.luben.zstd.ZstdInputStream;
+import com.github.luben.zstd.ZstdOutputStream;
 import com.iofairy.falcon.fs.FileName;
 import com.iofairy.falcon.fs.FilePath;
 import com.iofairy.falcon.fs.PathInfo;
@@ -24,6 +26,8 @@ import com.iofairy.falcon.io.MultiByteArrayOutputStream;
 import com.iofairy.falcon.time.Stopwatch;
 import com.iofairy.falcon.zip.ArchiveFormat;
 import com.iofairy.lambda.*;
+import com.iofairy.rainforest.zip.attr.ZstdInputProperty;
+import com.iofairy.rainforest.zip.attr.ZstdOutputProperty;
 import com.iofairy.rainforest.zip.base.*;
 import com.iofairy.top.O;
 import com.iofairy.tuple.Tuple;
@@ -33,6 +37,7 @@ import org.apache.commons.compress.archivers.ArchiveOutputStream;
 import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
 import org.apache.commons.compress.archivers.tar.TarArchiveOutputStream;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.*;
@@ -391,6 +396,11 @@ public abstract class SuperACs implements SuperAC {
                 return SuperXz.of();
             case ZIP:
                 return SuperZip.of();
+            case TAR_ZST:
+            case TZST:
+                return SuperTarZstd.of();
+            case ZSTD:
+                return SuperZstd.of();
             default:
                 return null;
         }
@@ -414,6 +424,8 @@ public abstract class SuperACs implements SuperAC {
         superACs.add(SuperTarXz.of());
         superACs.add(SuperXz.of());
         superACs.add(SuperZip.of());
+        superACs.add(SuperTarZstd.of());
+        superACs.add(SuperZstd.of());
         return superACs;
     }
 
@@ -460,5 +472,34 @@ public abstract class SuperACs implements SuperAC {
         archiveEntry.setSize(entrySize);
         return archiveEntry;
     }
+
+
+    protected static void setZstdOutputStreamOptions(ZstdOutputStream zos, ZstdOutputProperty outputProperty) throws IOException {
+        zos.setChecksum(outputProperty.isUseChecksums());
+        zos.setCloseFrameOnFlush(outputProperty.isCloseFrameOnFlush());
+        if (outputProperty.getDict() != null) zos.setDict(outputProperty.getDict());
+        if (outputProperty.getDictCompress() != null) zos.setDict(outputProperty.getDictCompress());
+        if (outputProperty.getLevel() != null) zos.setLevel(outputProperty.getLevel());
+        if (outputProperty.getLongDistanceMatching() != null) zos.setLong(outputProperty.getLongDistanceMatching());
+        if (outputProperty.getWorkers() != null) zos.setWorkers(outputProperty.getWorkers());
+        if (outputProperty.getOverlapLog() != null) zos.setOverlapLog(outputProperty.getOverlapLog());
+        if (outputProperty.getJobSize() != null) zos.setJobSize(outputProperty.getJobSize());
+        if (outputProperty.getTargetLength() != null) zos.setTargetLength(outputProperty.getTargetLength());
+        if (outputProperty.getMinMatch() != null) zos.setMinMatch(outputProperty.getMinMatch());
+        if (outputProperty.getSearchLog() != null) zos.setSearchLog(outputProperty.getSearchLog());
+        if (outputProperty.getChainLog() != null) zos.setChainLog(outputProperty.getChainLog());
+        if (outputProperty.getHashLog() != null) zos.setHashLog(outputProperty.getHashLog());
+        if (outputProperty.getWindowLog() != null) zos.setWindowLog(outputProperty.getWindowLog());
+        if (outputProperty.getStrategy() != null) zos.setStrategy(outputProperty.getStrategy());
+    }
+
+    protected static void setZstdInputStreamOptions(ZstdInputStream zipis, ZstdInputProperty inputProperty) throws IOException {
+        zipis.setContinuous(inputProperty.isContinuous());
+        zipis.setRefMultipleDDicts(inputProperty.isUseMultiple());
+        if (inputProperty.getDict() != null) zipis.setDict(inputProperty.getDict());
+        if (inputProperty.getDictDecompress() != null) zipis.setDict(inputProperty.getDictDecompress());
+        if (inputProperty.getWindowLogMax() != null) zipis.setLongMax(inputProperty.getWindowLogMax());
+    }
+
 
 }
