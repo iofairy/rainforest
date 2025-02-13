@@ -19,6 +19,7 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 import lombok.experimental.Accessors;
+import org.tukaani.xz.ArrayCache;
 
 import java.nio.charset.Charset;
 import java.nio.charset.UnsupportedCharsetException;
@@ -43,11 +44,23 @@ public class XzInputProperty implements ArchiveInputProperty {
     @Accessors(chain = true)
     boolean decompressConcatenated = false;
     /**
-     * 内存限制（单位：kb），超出内存限制，则会抛出 {@link org.apache.commons.compress.MemoryLimitException}
+     * 内存限制（单位：kibibytes (KiB)），超出内存限制，则会抛出 {@link org.apache.commons.compress.MemoryLimitException}
      */
     @Setter
     @Accessors(chain = true)
     int memoryLimitInKb = -1;
+    /**
+     * If {@code true}, the integrity checks will be verified; this should almost never be set to {@code false}
+     */
+    @Setter
+    @Accessors(chain = true)
+    boolean verifyCheck;
+    /**
+     * Cache to be used for allocating large arrays
+     */
+    @Setter
+    @Accessors(chain = true)
+    ArrayCache arrayCache = ArrayCache.getDefaultCache();
 
     public XzInputProperty() {
     }

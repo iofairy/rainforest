@@ -37,7 +37,7 @@ import org.apache.commons.compress.archivers.tar.TarArchiveOutputStream;
 import java.io.*;
 import java.util.*;
 
-import static com.iofairy.falcon.misc.Preconditions.checkFileNotFound;
+import static com.iofairy.falcon.misc.Preconditions.*;
 
 /**
  * 超级.tar.zst / .tzst 解压缩与重压缩

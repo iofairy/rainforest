@@ -24,12 +24,15 @@ import com.iofairy.rainforest.zip.attr.XzOutputProperty;
 import com.iofairy.rainforest.zip.base.*;
 import com.iofairy.rainforest.zip.utils.ZipKit;
 import com.iofairy.tcf.Close;
+import com.iofairy.top.G;
 import com.iofairy.tuple.Tuple2;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
-import org.apache.commons.compress.compressors.xz.XZCompressorInputStream;
-import org.apache.commons.compress.compressors.xz.XZCompressorOutputStream;
+import org.tukaani.xz.LZMA2Options;
+import org.tukaani.xz.SingleXZInputStream;
+import org.tukaani.xz.XZInputStream;
+import org.tukaani.xz.XZOutputStream;
 
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -127,13 +130,17 @@ public class SuperXz extends SuperACs {
         // <<< 打印日志参数
 
         final ArrayList<R> rs = new ArrayList<>();
-        XZCompressorInputStream zipis = null;
+        InputStream zipis = null;
         try {
             if (unzipACMap == null) unzipACMap = toSuperACMap(superACs);
 
             String entryFileName = ZipKit.getUncompressedName(zipFileName, format());
 
-            zipis = new XZCompressorInputStream(is, unzipInputProperty.isDecompressConcatenated(), unzipInputProperty.getMemoryLimitInKb());
+            if (unzipInputProperty.isDecompressConcatenated()) {
+                zipis = new XZInputStream(is, unzipInputProperty.getMemoryLimitInKb(), unzipInputProperty.isVerifyCheck(), unzipInputProperty.getArrayCache());
+            } else {
+                zipis = new SingleXZInputStream(is, unzipInputProperty.getMemoryLimitInKb(), unzipInputProperty.isVerifyCheck(), unzipInputProperty.getArrayCache());
+            }
 
             final int newUnzipTimes = unzipTimes + 1;
             final int newUnzipLevel = unzipLevel <= 0 ? unzipLevel : unzipLevel - 1;
@@ -195,13 +202,17 @@ public class SuperXz extends SuperACs {
         // <<< 打印日志参数
 
         final ArrayList<R> rs = new ArrayList<>();
-        XZCompressorInputStream zipis = null;
+        InputStream zipis = null;
         try {
             if (unzipACMap == null) unzipACMap = toSuperACMap(superACs);
 
             String entryFileName = ZipKit.getUncompressedName(zipFileName, format());
 
-            zipis = new XZCompressorInputStream(is, unzipInputProperty.isDecompressConcatenated(), unzipInputProperty.getMemoryLimitInKb());
+            if (unzipInputProperty.isDecompressConcatenated()) {
+                zipis = new XZInputStream(is, unzipInputProperty.getMemoryLimitInKb(), unzipInputProperty.isVerifyCheck(), unzipInputProperty.getArrayCache());
+            } else {
+                zipis = new SingleXZInputStream(is, unzipInputProperty.getMemoryLimitInKb(), unzipInputProperty.isVerifyCheck(), unzipInputProperty.getArrayCache());
+            }
 
             final int newUnzipTimes = unzipTimes + 1;
             final int newUnzipLevel = unzipLevel <= 0 ? unzipLevel : unzipLevel - 1;
@@ -276,18 +287,28 @@ public class SuperXz extends SuperACs {
         // <<< 打印日志参数
 
         final ArrayList<R> rs = new ArrayList<>();
-        XZCompressorInputStream zipis = null;
+        InputStream zipis = null;
         MultiByteArrayOutputStream baos = null;
-        XZCompressorOutputStream zos = null;
+        XZOutputStream zos = null;
         try {
             if (reZipACMap == null) reZipACMap = toSuperACMap(superACs);
 
 
-            zipis = new XZCompressorInputStream(is, reZipInputProperty.isDecompressConcatenated(), reZipInputProperty.getMemoryLimitInKb());
+            if (reZipInputProperty.isDecompressConcatenated()) {
+                zipis = new XZInputStream(is, reZipInputProperty.getMemoryLimitInKb(), reZipInputProperty.isVerifyCheck(), reZipInputProperty.getArrayCache());
+            } else {
+                zipis = new SingleXZInputStream(is, reZipInputProperty.getMemoryLimitInKb(), reZipInputProperty.isVerifyCheck(), reZipInputProperty.getArrayCache());
+            }
             String entryFileName = ZipKit.getUncompressedName(zipFileName, format());
 
             baos = new MultiByteArrayOutputStream();
-            zos = new XZCompressorOutputStream(baos, reZipOutputProperty.getPreset());
+
+            if (G.isEmpty(reZipOutputProperty.getFilterOptions())) {
+                zos = new XZOutputStream(baos, new LZMA2Options(reZipOutputProperty.getPreset()), reZipOutputProperty.getCheckType(), reZipOutputProperty.getArrayCache());
+            } else {
+                zos = new XZOutputStream(baos, reZipOutputProperty.getFilterOptions(), reZipOutputProperty.getCheckType(), reZipOutputProperty.getArrayCache());
+            }
+
 
             final int newUnzipTimes = unzipTimes + 1;
             final int newUnzipLevel = unzipLevel <= 0 ? unzipLevel : unzipLevel - 1;

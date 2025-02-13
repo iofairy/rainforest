@@ -23,6 +23,7 @@ import com.iofairy.lambda.*;
 import com.iofairy.rainforest.zip.attr.*;
 import com.iofairy.rainforest.zip.base.*;
 import com.iofairy.tcf.Close;
+import com.iofairy.top.G;
 import com.iofairy.tuple.Tuple2;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -30,8 +31,10 @@ import lombok.ToString;
 import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
 import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
 import org.apache.commons.compress.archivers.tar.TarArchiveOutputStream;
-import org.apache.commons.compress.compressors.xz.XZCompressorInputStream;
-import org.apache.commons.compress.compressors.xz.XZCompressorOutputStream;
+import org.tukaani.xz.LZMA2Options;
+import org.tukaani.xz.SingleXZInputStream;
+import org.tukaani.xz.XZInputStream;
+import org.tukaani.xz.XZOutputStream;
 
 import java.io.*;
 import java.util.*;
@@ -155,11 +158,15 @@ public class SuperTarXz extends SuperACs {
 
         final ArrayList<R> rs = new ArrayList<>();
         TarArchiveInputStream zipis = null;
-        XZCompressorInputStream innerIs = null;
+        InputStream innerIs = null;
         try {
             if (unzipACMap == null) unzipACMap = toSuperACMap(superACs);
 
-            innerIs = new XZCompressorInputStream(is, unzipInputProperty.isDecompressConcatenated(), unzipInputProperty.getMemoryLimitInKb());
+            if (unzipInputProperty.isDecompressConcatenated()) {
+                innerIs = new XZInputStream(is, unzipInputProperty.getMemoryLimitInKb(), unzipInputProperty.isVerifyCheck(), unzipInputProperty.getArrayCache());
+            } else {
+                innerIs = new SingleXZInputStream(is, unzipInputProperty.getMemoryLimitInKb(), unzipInputProperty.isVerifyCheck(), unzipInputProperty.getArrayCache());
+            }
             zipis = new TarArchiveInputStream(innerIs, unTarInputProperty.getBlockSize(), unTarInputProperty.getRecordSize(),
                     unTarInputProperty.getFileNameEncoding(), unTarInputProperty.isLenient());
 
@@ -231,11 +238,15 @@ public class SuperTarXz extends SuperACs {
 
         final ArrayList<R> rs = new ArrayList<>();
         TarArchiveInputStream zipis = null;
-        XZCompressorInputStream innerIs = null;
+        InputStream innerIs = null;
         try {
             if (unzipACMap == null) unzipACMap = toSuperACMap(superACs);
 
-            innerIs = new XZCompressorInputStream(is, unzipInputProperty.isDecompressConcatenated(), unzipInputProperty.getMemoryLimitInKb());
+            if (unzipInputProperty.isDecompressConcatenated()) {
+                innerIs = new XZInputStream(is, unzipInputProperty.getMemoryLimitInKb(), unzipInputProperty.isVerifyCheck(), unzipInputProperty.getArrayCache());
+            } else {
+                innerIs = new SingleXZInputStream(is, unzipInputProperty.getMemoryLimitInKb(), unzipInputProperty.isVerifyCheck(), unzipInputProperty.getArrayCache());
+            }
             zipis = new TarArchiveInputStream(innerIs, unTarInputProperty.getBlockSize(), unTarInputProperty.getRecordSize(),
                     unTarInputProperty.getFileNameEncoding(), unTarInputProperty.isLenient());
 
@@ -322,17 +333,25 @@ public class SuperTarXz extends SuperACs {
         TarArchiveInputStream zipis = null;
         MultiByteArrayOutputStream baos = null;
         TarArchiveOutputStream zos = null;
-        XZCompressorInputStream innerIs = null;
-        XZCompressorOutputStream innerOs = null;
+        InputStream innerIs = null;
+        XZOutputStream innerOs = null;
         try {
             if (reZipACMap == null) reZipACMap = toSuperACMap(superACs);
 
-            innerIs = new XZCompressorInputStream(is, reZipInputProperty.isDecompressConcatenated(), reZipInputProperty.getMemoryLimitInKb());
+            if (reZipInputProperty.isDecompressConcatenated()) {
+                innerIs = new XZInputStream(is, reZipInputProperty.getMemoryLimitInKb(), reZipInputProperty.isVerifyCheck(), reZipInputProperty.getArrayCache());
+            } else {
+                innerIs = new SingleXZInputStream(is, reZipInputProperty.getMemoryLimitInKb(), reZipInputProperty.isVerifyCheck(), reZipInputProperty.getArrayCache());
+            }
             zipis = new TarArchiveInputStream(innerIs, reTarInputProperty.getBlockSize(), reTarInputProperty.getRecordSize(),
                     reTarInputProperty.getFileNameEncoding(), reTarInputProperty.isLenient());
 
             baos = new MultiByteArrayOutputStream();
-            innerOs = new XZCompressorOutputStream(baos, reZipOutputProperty.getPreset());
+            if (G.isEmpty(reZipOutputProperty.getFilterOptions())) {
+                innerOs = new XZOutputStream(baos, new LZMA2Options(reZipOutputProperty.getPreset()), reZipOutputProperty.getCheckType(), reZipOutputProperty.getArrayCache());
+            } else {
+                innerOs = new XZOutputStream(baos, reZipOutputProperty.getFilterOptions(), reZipOutputProperty.getCheckType(), reZipOutputProperty.getArrayCache());
+            }
             zos = new TarArchiveOutputStream(innerOs, reTarOutputProperty.getBlockSize(), reTarOutputProperty.getFileNameEncoding());
 
             final int newUnzipTimes = unzipTimes + 1;

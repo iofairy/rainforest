@@ -19,7 +19,10 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 import lombok.experimental.Accessors;
+import org.tukaani.xz.ArrayCache;
+import org.tukaani.xz.FilterOptions;
 import org.tukaani.xz.LZMA2Options;
+import org.tukaani.xz.XZ;
 
 import java.nio.charset.Charset;
 import java.nio.charset.UnsupportedCharsetException;
@@ -44,6 +47,24 @@ public class XzOutputProperty implements ArchiveInputProperty {
     @Setter
     @Accessors(chain = true)
     private int preset = LZMA2Options.PRESET_DEFAULT;
+    /**
+     * 过滤操作。这个值不为空时，将使用该值作为压缩级别，而忽略 {@link #preset} 的值
+     */
+    @Setter
+    @Accessors(chain = true)
+    FilterOptions[] filterOptions;
+    /**
+     * Type of the integrity check, for example {@link XZ#CHECK_CRC64}
+     */
+    @Setter
+    @Accessors(chain = true)
+    int checkType = XZ.CHECK_CRC64;
+    /**
+     * Cache to be used for allocating large arrays
+     */
+    @Setter
+    @Accessors(chain = true)
+    ArrayCache arrayCache = ArrayCache.getDefaultCache();
 
     public XzOutputProperty() {
     }
