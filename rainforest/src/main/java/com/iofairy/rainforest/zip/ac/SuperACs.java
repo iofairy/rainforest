@@ -26,20 +26,32 @@ import com.iofairy.falcon.io.MultiByteArrayOutputStream;
 import com.iofairy.falcon.time.Stopwatch;
 import com.iofairy.falcon.zip.ArchiveFormat;
 import com.iofairy.lambda.*;
+import com.iofairy.rainforest.zip.attr.GzipInputProperty;
+import com.iofairy.rainforest.zip.attr.GzipOutputProperty;
 import com.iofairy.rainforest.zip.attr.ZstdInputProperty;
 import com.iofairy.rainforest.zip.attr.ZstdOutputProperty;
 import com.iofairy.rainforest.zip.base.*;
+import com.iofairy.rainforest.zip.utils.ZipKit;
+import com.iofairy.top.G;
 import com.iofairy.top.O;
+import com.iofairy.top.S;
 import com.iofairy.tuple.Tuple;
 import com.iofairy.tuple.Tuple2;
+import net.lingala.zip4j.io.outputstream.ZipOutputStream;
+import net.lingala.zip4j.model.ZipModel;
+import net.lingala.zip4j.model.ZipParameters;
 import org.apache.commons.compress.archivers.ArchiveEntry;
 import org.apache.commons.compress.archivers.ArchiveOutputStream;
+import org.apache.commons.compress.archivers.sevenz.SevenZOutputFile;
 import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
 import org.apache.commons.compress.archivers.tar.TarArchiveOutputStream;
+import org.apache.commons.compress.compressors.gzip.GzipCompressorInputStream;
+import org.apache.commons.compress.compressors.gzip.GzipParameters;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.nio.charset.Charset;
 import java.util.*;
 
 import static com.iofairy.falcon.zip.ArchiveFormat.*;
@@ -74,7 +86,8 @@ public abstract class SuperACs implements SuperAC {
                                     RT4<InputStream, ? super Integer, ? super String, ? super String, ? extends R, Exception> otherAction,
                                     ZipLogLevel zipLogLevel,
                                     String unzipId,
-                                    String logSource) throws Exception {
+                                    String logSource
+    ) throws Exception {
         SuperAC superAC = getSuperAC(entryFileName, unzipACMap);
 
         if (superAC != null) {
@@ -99,8 +112,8 @@ public abstract class SuperACs implements SuperAC {
                         /*
                          * 解压文件
                          */
-                        List<R> tmpTs = superAC.unzip(entryIs, entryFileName, newUnzipTimes, newUnzipLevel,
-                                unzipFilter, otherFilter, beforeUnzipFilter, beforeUnzipAction, otherAction, zipLogLevel, unzipACMap);
+                        List<R> tmpTs = superAC.unzip(entryIs, zipFileName, entryFileName, newUnzipTimes, newUnzipLevel,
+                                unzipFilter, otherFilter, beforeUnzipFilter, beforeUnzipAction, otherAction, zipLogLevel, unzipACMap, null);
                         rs.addAll(tmpTs);
 
                         // 打印日志信息
@@ -142,7 +155,8 @@ public abstract class SuperACs implements SuperAC {
                                         ZipLogLevel zipLogLevel,
                                         String unzipId,
                                         String logSource,
-                                        Set<AutoCloseable> closeables) throws Exception {
+                                        Set<AutoCloseable> closeables
+    ) throws Exception {
         SuperAC superAC = getSuperAC(entryFileName, unzipACMap);
 
         if (superAC != null) {
@@ -154,8 +168,8 @@ public abstract class SuperACs implements SuperAC {
                     /*
                      * 解压文件
                      */
-                    List<R> tmpTs = superAC.unzipFast(currentIs, entryFileName, newUnzipTimes, newUnzipLevel,
-                            unzipFilter, otherFilter, otherAction, zipLogLevel, unzipACMap, closeables);
+                    List<R> tmpTs = superAC.unzipFast(currentIs, zipFileName, entryFileName, newUnzipTimes, newUnzipLevel,
+                            unzipFilter, otherFilter, otherAction, zipLogLevel, unzipACMap, closeables, null);
                     rs.addAll(tmpTs);
 
                     // 打印日志信息
@@ -209,7 +223,8 @@ public abstract class SuperACs implements SuperAC {
                                         RT5<InputStream, OutputStream, ? super Integer, ? super String, ? super String, ? extends R, Exception> otherAction,
                                         ZipLogLevel zipLogLevel,
                                         String unzipId,
-                                        String logSource) throws Exception {
+                                        String logSource
+    ) throws Exception {
         SuperAC superAC = getSuperAC(entryFileName, reZipACMap);
 
         try (MultiByteArrayOutputStream entryOs = new MultiByteArrayOutputStream()) {
@@ -238,9 +253,9 @@ public abstract class SuperACs implements SuperAC {
                         /*
                          * 解压并重压缩文件
                          */
-                        ZipResult<R> zipResult = superAC.reZip(entryIs, entryFileName, newUnzipTimes, newUnzipLevel, addFileFilter,
+                        ZipResult<R> zipResult = superAC.reZip(entryIs, zipFileName, entryFileName, newUnzipTimes, newUnzipLevel, addFileFilter,
                                 deleteFileFilter, unzipFilter, otherFilter, beforeUnzipFilter, afterZipFilter, addFilesAction, addBytesAction,
-                                deleteFileAction, beforeUnzipAction, afterZipAction, otherAction, zipLogLevel, reZipACMap);
+                                deleteFileAction, beforeUnzipAction, afterZipAction, otherAction, zipLogLevel, reZipACMap, null);
                         rs.addAll(zipResult.getResults());
                         byteArrays = zipResult.getBytes();
 
@@ -308,7 +323,9 @@ public abstract class SuperACs implements SuperAC {
         return reZipACMap.get(archiveFormat);
     }
 
-    protected static String getUnzipId(int length) {
+    protected static String getUnzipId(int length, String unzipId) {
+        if (S.isNotBlank(unzipId)) return unzipId;
+
         checkArgument(length < 2, "参数`length`必须 >= 2！");
 
         final Random random = new Random();
@@ -499,6 +516,65 @@ public abstract class SuperACs implements SuperAC {
         if (inputProperty.getDict() != null) zipis.setDict(inputProperty.getDict());
         if (inputProperty.getDictDecompress() != null) zipis.setDict(inputProperty.getDictDecompress());
         if (inputProperty.getWindowLogMax() != null) zipis.setLongMax(inputProperty.getWindowLogMax());
+    }
+
+    protected static ZipModel getZipModel(ZipModel zipModel) {
+        /*
+         * ZipModel 在压缩时，不能重复使用，所以这里会 new 一个新的，如果重复使用，压缩包会出错。
+         */
+        ZipModel model = new ZipModel();
+        model.setZip64Format(zipModel.isZip64Format());
+        return model;
+    }
+
+    protected static ZipParameters getParameters(ZipParameters defaultZipParameters, String entryFileName, boolean encrypted) {
+        ZipParameters zipParameters = new ZipParameters(defaultZipParameters);
+        zipParameters.setFileNameInZip(entryFileName);
+        zipParameters.setEncryptFiles(encrypted);
+        zipParameters.setEncryptionMethod(defaultZipParameters.getEncryptionMethod());
+        return zipParameters;
+    }
+
+    protected static void closeZipEntry(ZipOutputStream zos, Throwable suppressed) {
+        try {
+            zos.closeEntry();
+        } catch (Throwable e) {
+            if (suppressed != null) {
+                e.addSuppressed(suppressed);
+            }
+            O.sneakyThrows(e);
+        }
+    }
+
+    protected static void closeSevenZEntry(SevenZOutputFile zos, Throwable suppressed) {
+        try {
+            zos.closeArchiveEntry();
+        } catch (Throwable e) {
+            if (suppressed != null) {
+                e.addSuppressed(suppressed);
+            }
+            O.sneakyThrows(e);
+        }
+    }
+
+    protected static String fileNameInGzip(GzipCompressorInputStream gcis, String gzipFileName, GzipInputProperty gzipInputProperty) {
+        Charset inputFromCharset = Charset.forName(gzipInputProperty.getFileNameEncoding1());
+        Charset inputToCharset = Charset.forName(gzipInputProperty.getFileNameEncoding2());
+        String filename = gcis == null ? null : gcis.getMetaData().getFileName();
+        if (G.isEmpty(filename)) {
+            return ZipKit.getUncompressedName(gzipFileName, ArchiveFormat.GZIP);
+        } else {
+            return new String(filename.getBytes(inputFromCharset), inputToCharset);
+        }
+    }
+
+    protected static GzipParameters getGzipParameters(GzipOutputProperty gzipOutputProperty, String entryFileName) {
+        Charset outputFromCharset = Charset.forName(gzipOutputProperty.getFileNameEncoding2());
+        Charset outputToCharset = Charset.forName(gzipOutputProperty.getFileNameEncoding1());
+        GzipParameters gzipParameters = gzipOutputProperty.getGzipParameters();
+        String fileNameInGzip = new String(entryFileName.getBytes(outputFromCharset), outputToCharset);
+        gzipParameters.setFileName(fileNameInGzip);
+        return gzipParameters;
     }
 
 

@@ -56,14 +56,22 @@ public class LogPrinter {
     public static void printBeforeUnzip(String unzipId, int unzipTimes, String zipFileName, String entryFileName, ZipLogLevel zipLogLevel, String logSource) {
         if (zipLogLevel.level >= ZipLogLevel.BRIEF.level) {
             String repeat = S.repeat(">", Math.max(MAX_REPEAT_TIMES - unzipTimes, 1) * REPEAT_FACTOR);
-            logs("{} 解压ID：[{}]，当前unzipTimes为：[{}]，正在解压【{}】中的压缩包【{}】…… <<{}>>", repeat, unzipId, unzipTimes, zipFileName, entryFileName, logSource);
+            if (S.isEmpty(zipFileName)) {
+                logs("{} 解压ID：[{}]，当前unzipTimes为：[{}]，正在解压【{}】…… <<{}>>", repeat, unzipId, unzipTimes, entryFileName, logSource);
+            } else {
+                logs("{} 解压ID：[{}]，当前unzipTimes为：[{}]，正在解压【{}】中的压缩包【{}】…… <<{}>>", repeat, unzipId, unzipTimes, zipFileName, entryFileName, logSource);
+            }
         }
     }
 
     public static void printAfterUnzip(String unzipId, int unzipTimes, String zipFileName, String entryFileName, ZipLogLevel zipLogLevel, String logSource, Stopwatch stopwatch) {
         if (zipLogLevel.level >= ZipLogLevel.BRIEF.level) {
             String repeat = S.repeat("<", Math.max(MAX_REPEAT_TIMES - unzipTimes, 1) * REPEAT_FACTOR);
-            logs("{} 解压ID：[{}]，当前unzipTimes为：[{}]，完成解压【{}】中的压缩包【{}】！耗时：【{}】 <<{}>>", repeat, unzipId, unzipTimes, zipFileName, entryFileName, stopwatch, logSource);
+            if (S.isEmpty(zipFileName)) {
+                logs("{} 解压ID：[{}]，当前unzipTimes为：[{}]，完成解压【{}】！耗时：【{}】 <<{}>>", repeat, unzipId, unzipTimes, entryFileName, stopwatch, logSource);
+            } else {
+                logs("{} 解压ID：[{}]，当前unzipTimes为：[{}]，完成解压【{}】中的压缩包【{}】！耗时：【{}】 <<{}>>", repeat, unzipId, unzipTimes, zipFileName, entryFileName, stopwatch, logSource);
+            }
         }
     }
 
