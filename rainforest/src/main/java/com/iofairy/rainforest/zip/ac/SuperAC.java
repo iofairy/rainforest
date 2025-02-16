@@ -85,7 +85,7 @@ public interface SuperAC {
             SuperAC superAC = tuple._2;
 
             /*
-             * 打印日志信息
+             * 打印最外层压缩包日志信息（解压前）
              */
             Stopwatch stopwatch = Stopwatch.run();
             String logSource = SuperAC.class.getSimpleName() + ".unzip()";
@@ -96,7 +96,7 @@ public interface SuperAC {
             List<R> unzip = superAC.unzip(is, null, zipFileName, 1, unzipLevel, unzipFilter,
                     otherFilter, beforeUnzipFilter, beforeUnzipAction, otherAction, zipLogLevel, superACMap, null);
             /*
-             * 打印日志信息
+             * 打印最外层压缩包日志信息（解压后）
              */
             LogPrinter.printAfterUnzip(unzipId, zipFileName, zipLogLevel, logSource, stopwatch);
 
@@ -166,7 +166,7 @@ public interface SuperAC {
             SuperAC superAC = tuple._2;
 
             /*
-             * 打印日志信息
+             * 打印最外层压缩包日志信息（解压前）
              */
             Stopwatch stopwatch = Stopwatch.run();
             String logSource = SuperAC.class.getSimpleName() + ".unzipFast()";
@@ -177,7 +177,7 @@ public interface SuperAC {
             List<R> unzip = superAC.unzipFast(is, null, zipFileName, 1, unzipLevel, unzipFilter,
                     otherFilter, otherAction, zipLogLevel, superACMap, closeables, null);
             /*
-             * 打印日志信息
+             * 打印最外层压缩包日志信息（解压后）
              */
             LogPrinter.printAfterUnzip(unzipId, zipFileName, zipLogLevel, logSource, stopwatch);
 
@@ -343,7 +343,7 @@ public interface SuperAC {
             SuperAC superAC = tuple._2;
 
             /*
-             * 打印日志信息
+             * 打印最外层压缩包日志信息（解压前）
              */
             Stopwatch stopwatch = Stopwatch.run();
             String logSource = SuperAC.class.getSimpleName() + ".reZip()";
@@ -361,7 +361,7 @@ public interface SuperAC {
                 }
             }
             /*
-             * 打印日志信息
+             * 打印最外层压缩包日志信息（解压后）
              */
             LogPrinter.printAfterReZip(unzipId, zipFileName, zipLogLevel, logSource, stopwatch, byteLength);
 

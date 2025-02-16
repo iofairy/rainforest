@@ -132,7 +132,7 @@ public class SuperACTest {
                     null,
                     null,
                     (input, output, times, zipName, entryName) -> {
-                        System.out.println("处理其他文件：" + zipName + "---" + entryName);
+                        // System.out.println("处理其他文件：" + zipName + "---" + entryName);
 
                         IOs.copy(input, output);
                         output.write(("\n" + DateTime.nowDate() + ">>>>>>>这是这是新增加的一行\n").getBytes());
@@ -232,7 +232,7 @@ public class SuperACTest {
                     null,
                     null,
                     (input, output, times, zipName, entryName) -> {
-                        System.out.println("处理其他文件：" + zipName + "---" + entryName);
+                        // System.out.println("处理其他文件：" + zipName + "---" + entryName);
 
                         IOs.copy(input, output);
                         output.write(("\n" + DateTime.nowDate() + ">>>>>>>这是这是新增加的一行\n").getBytes());
@@ -341,7 +341,7 @@ public class SuperACTest {
                     null,
                     null,
                     (input, output, times, zipName, entryName) -> {
-                        System.out.println("处理其他文件：" + zipName + "---" + entryName);
+                        // System.out.println("处理其他文件：" + zipName + "---" + entryName);
 
                         IOs.copy(input, output);
                         output.write(("\n" + DateTime.nowDate() + ">>>>>>>这是这是新增加的一行\n").getBytes());
@@ -404,7 +404,7 @@ public class SuperACTest {
                     null,
                     null,
                     (input, output, times, zipName, entryName) -> {
-                        System.out.println("处理其他文件：" + zipName + "---" + entryName);
+                        // System.out.println("处理其他文件：" + zipName + "---" + entryName);
 
                         IOs.copy(input, output);
                         output.write(("\n" + DateTime.nowDate() + ">>>>>>>这是这是新增加的一行\n").getBytes());
@@ -514,7 +514,7 @@ public class SuperACTest {
                     null,
                     null,
                     (input, output, times, zipName, entryName) -> {
-                        System.out.println("处理其他文件：" + zipName + "---" + entryName);
+                        // System.out.println("处理其他文件：" + zipName + "---" + entryName);
 
                         IOs.copy(input, output);
                         output.write(("\n" + DateTime.nowDate() + ">>>>>>>这是这是新增加的一行\n").getBytes());
