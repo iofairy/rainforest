@@ -93,7 +93,7 @@ public interface SuperAC {
             /*
              * 压缩包处理
              */
-            List<R> unzip = superAC.unzip(is, null, zipFileName, 1, unzipLevel, unzipFilter,
+            List<R> unzip = superAC.unzip(is, null, zipFileName, SuperACs.INIT_UNZIP_TIMES, unzipLevel, unzipFilter,
                     otherFilter, beforeUnzipFilter, beforeUnzipAction, otherAction, zipLogLevel, superACMap, null);
             /*
              * 打印最外层压缩包日志信息（解压后）
@@ -174,8 +174,8 @@ public interface SuperAC {
             /*
              * 压缩包处理
              */
-            List<R> unzip = superAC.unzipFast(is, null, zipFileName, 1, unzipLevel, unzipFilter,
-                    otherFilter, otherAction, zipLogLevel, superACMap, closeables, null);
+            List<R> unzip = superAC.unzipFast(is, null, zipFileName, SuperACs.INIT_UNZIP_TIMES, unzipLevel,
+                    unzipFilter, otherFilter, otherAction, zipLogLevel, superACMap, closeables, null);
             /*
              * 打印最外层压缩包日志信息（解压后）
              */
@@ -351,7 +351,7 @@ public interface SuperAC {
             /*
              * 压缩包处理
              */
-            ZipResult<R> zipResult = superAC.reZip(is, null, zipFileName, 1, unzipLevel, addFileFilter, deleteFileFilter, unzipFilter, otherFilter, beforeUnzipFilter,
+            ZipResult<R> zipResult = superAC.reZip(is, null, zipFileName, SuperACs.INIT_UNZIP_TIMES, unzipLevel, addFileFilter, deleteFileFilter, unzipFilter, otherFilter, beforeUnzipFilter,
                     afterZipFilter, addFilesAction, addBytesAction, deleteFileAction, beforeUnzipAction, afterZipAction, otherAction, zipLogLevel, superACMap, null);
 
             long byteLength = 0;

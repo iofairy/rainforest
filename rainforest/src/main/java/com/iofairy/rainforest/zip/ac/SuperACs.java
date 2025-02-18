@@ -65,6 +65,7 @@ import static com.iofairy.falcon.misc.Preconditions.*;
 public abstract class SuperACs implements SuperAC {
     private static final char[] LETTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".toCharArray();
     private static final char[] NUMBERS = "0123456789".toCharArray();
+    public static final int INIT_UNZIP_TIMES = 1;       // 初始的解压次数
 
     protected Map<ArchiveFormat, SuperAC> unzipACMap;
     protected Map<ArchiveFormat, SuperAC> reZipACMap;
