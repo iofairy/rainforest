@@ -18,7 +18,7 @@ public class ZipKitTest {
             ZipKit.getUncompressedName(null, ArchiveFormat.TAR);
         } catch (Exception e) {
             System.out.println(e.getMessage());
-            assertEquals(e.getMessage(), "None of these parameters [fileName, archiveFormat] can be null! ");
+            assertEquals(e.getMessage(), "None of these parameters [fileName, archiveFormat] can be null! But parameter [fileName] is null! ");
         }
         try {
             ZipKit.getUncompressedName("a", ArchiveFormat.TAR);
