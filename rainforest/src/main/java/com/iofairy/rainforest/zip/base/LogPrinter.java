@@ -15,7 +15,7 @@
  */
 package com.iofairy.rainforest.zip.base;
 
-import com.iofairy.falcon.time.Stopwatch;
+import com.iofairy.time.Stopwatch;
 import com.iofairy.falcon.unit.Bytes;
 import com.iofairy.rainforest.zip.ac.SuperACs;
 import com.iofairy.top.S;

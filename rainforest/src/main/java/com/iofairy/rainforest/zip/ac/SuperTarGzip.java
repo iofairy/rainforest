@@ -17,7 +17,7 @@ package com.iofairy.rainforest.zip.ac;
 
 import com.iofairy.falcon.fs.FilePath;
 import com.iofairy.falcon.io.*;
-import com.iofairy.falcon.time.Stopwatch;
+import com.iofairy.time.Stopwatch;
 import com.iofairy.falcon.zip.ArchiveFormat;
 import com.iofairy.lambda.*;
 import com.iofairy.rainforest.zip.attr.GzipInputProperty;
@@ -38,9 +38,10 @@ import org.apache.commons.compress.compressors.gzip.GzipCompressorOutputStream;
 import org.apache.commons.compress.compressors.gzip.GzipParameters;
 
 import java.io.*;
+import java.nio.charset.Charset;
 import java.util.*;
 
-import static com.iofairy.falcon.misc.Preconditions.*;
+import static com.iofairy.validator.Preconditions.*;
 
 /**
  * 超级.tar.gz / .tgz解压缩与重压缩
@@ -168,7 +169,11 @@ public class SuperTarGzip extends SuperACs {
         try {
             if (unzipACMap == null) unzipACMap = toSuperACMap(superACs);
 
-            innerIs = new GzipCompressorInputStream(is, unzipInputProperty.isDecompressConcatenated());
+            innerIs = GzipCompressorInputStream.builder()
+                    .setInputStream(is)
+                    .setDecompressConcatenated(unzipInputProperty.isDecompressConcatenated())
+                    .setFileNameCharset(Charset.forName(unzipInputProperty.getFileNameEncoding1()))
+                    .get();
             zipis = new TarArchiveInputStream(innerIs,
                     unTarInputProperty.getBlockSize(), unTarInputProperty.getRecordSize(), unTarInputProperty.getFileNameEncoding(), unTarInputProperty.isLenient());
 
@@ -249,7 +254,11 @@ public class SuperTarGzip extends SuperACs {
         try {
             if (unzipACMap == null) unzipACMap = toSuperACMap(superACs);
 
-            innerIs = new GzipCompressorInputStream(is, unzipInputProperty.isDecompressConcatenated());
+            innerIs = GzipCompressorInputStream.builder()
+                    .setInputStream(is)
+                    .setDecompressConcatenated(unzipInputProperty.isDecompressConcatenated())
+                    .setFileNameCharset(Charset.forName(unzipInputProperty.getFileNameEncoding1()))
+                    .get();
             zipis = new TarArchiveInputStream(innerIs,
                     unTarInputProperty.getBlockSize(), unTarInputProperty.getRecordSize(), unTarInputProperty.getFileNameEncoding(), unTarInputProperty.isLenient());
 
@@ -345,7 +354,11 @@ public class SuperTarGzip extends SuperACs {
         try {
             if (reZipACMap == null) reZipACMap = toSuperACMap(superACs);
 
-            innerIs = new GzipCompressorInputStream(is, reZipInputProperty.isDecompressConcatenated());
+            innerIs = GzipCompressorInputStream.builder()
+                    .setInputStream(is)
+                    .setDecompressConcatenated(reZipInputProperty.isDecompressConcatenated())
+                    .setFileNameCharset(Charset.forName(reZipInputProperty.getFileNameEncoding1()))
+                    .get();
             zipis = new TarArchiveInputStream(innerIs, reTarInputProperty.getBlockSize(), reTarInputProperty.getRecordSize(),
                     reTarInputProperty.getFileNameEncoding(), reTarInputProperty.isLenient());
 

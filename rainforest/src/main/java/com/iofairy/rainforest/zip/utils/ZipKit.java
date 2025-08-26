@@ -24,7 +24,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import static com.iofairy.falcon.zip.ArchiveFormat.*;
-import static com.iofairy.falcon.misc.Preconditions.*;
+import static com.iofairy.validator.Preconditions.*;
 
 /**
  * 解压缩工具类

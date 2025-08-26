@@ -16,7 +16,7 @@
 package com.iofairy.rainforest.zip.ac;
 
 import com.iofairy.falcon.io.*;
-import com.iofairy.falcon.time.Stopwatch;
+import com.iofairy.time.Stopwatch;
 import com.iofairy.falcon.zip.ArchiveFormat;
 import com.iofairy.lambda.*;
 import com.iofairy.rainforest.zip.attr.GzipInputProperty;
@@ -32,6 +32,7 @@ import org.apache.commons.compress.compressors.gzip.GzipCompressorOutputStream;
 import org.apache.commons.compress.compressors.gzip.GzipParameters;
 
 import java.io.*;
+import java.nio.charset.Charset;
 import java.util.*;
 
 /**
@@ -135,7 +136,11 @@ public class SuperGzip extends SuperACs {
         try {
             if (unzipACMap == null) unzipACMap = toSuperACMap(superACs);
 
-            zipis = new GzipCompressorInputStream(is, unzipInputProperty.isDecompressConcatenated());
+            zipis = GzipCompressorInputStream.builder()
+                    .setInputStream(is)
+                    .setDecompressConcatenated(unzipInputProperty.isDecompressConcatenated())
+                    .setFileNameCharset(Charset.forName(unzipInputProperty.getFileNameEncoding1()))
+                    .get();
 
             String entryFileName = fileNameInGzip(zipis, zipFileName, unzipInputProperty);
 
@@ -208,7 +213,11 @@ public class SuperGzip extends SuperACs {
         try {
             if (unzipACMap == null) unzipACMap = toSuperACMap(superACs);
 
-            zipis = new GzipCompressorInputStream(is, unzipInputProperty.isDecompressConcatenated());
+            zipis = GzipCompressorInputStream.builder()
+                    .setInputStream(is)
+                    .setDecompressConcatenated(unzipInputProperty.isDecompressConcatenated())
+                    .setFileNameCharset(Charset.forName(unzipInputProperty.getFileNameEncoding1()))
+                    .get();
 
             String entryFileName = fileNameInGzip(zipis, zipFileName, unzipInputProperty);
 
@@ -295,7 +304,11 @@ public class SuperGzip extends SuperACs {
         try {
             if (reZipACMap == null) reZipACMap = toSuperACMap(superACs);
 
-            zipis = new GzipCompressorInputStream(is, reZipInputProperty.isDecompressConcatenated());
+            zipis = GzipCompressorInputStream.builder()
+                    .setInputStream(is)
+                    .setDecompressConcatenated(reZipInputProperty.isDecompressConcatenated())
+                    .setFileNameCharset(Charset.forName(reZipInputProperty.getFileNameEncoding1()))
+                    .get();
             String entryFileName = fileNameInGzip(zipis, zipFileName, reZipInputProperty);
             GzipParameters gzipParameters = getGzipParameters(reZipOutputProperty, entryFileName);
 

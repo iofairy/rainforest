@@ -1,9 +1,9 @@
-package com.iofairy.test;
+package com.iofairy.test.zip;
 
 import cn.hutool.core.io.FileUtil;
 import com.iofairy.falcon.io.IOs;
 import com.iofairy.falcon.io.MultiByteArrayInputStream;
-import com.iofairy.falcon.time.DateTime;
+import com.iofairy.time.DateTime;
 import com.iofairy.falcon.util.Numbers;
 import com.iofairy.falcon.zip.ArchiveFormat;
 import com.iofairy.rainforest.zip.ac.Super7Zip;
@@ -135,7 +135,7 @@ public class SuperACTest {
                         // System.out.println("处理其他文件：" + zipName + "---" + entryName);
 
                         IOs.copy(input, output);
-                        output.write(("\n" + DateTime.nowDate() + ">>>>>>>这是这是新增加的一行\n").getBytes());
+                        output.write(("\n" + DateTime.now() + ">>>>>>>这是这是新增加的一行\n").getBytes());
 
                         return "其他文件处理：" + entryName;
                     },
@@ -235,7 +235,7 @@ public class SuperACTest {
                         // System.out.println("处理其他文件：" + zipName + "---" + entryName);
 
                         IOs.copy(input, output);
-                        output.write(("\n" + DateTime.nowDate() + ">>>>>>>这是这是新增加的一行\n").getBytes());
+                        output.write(("\n" + DateTime.now() + ">>>>>>>这是这是新增加的一行\n").getBytes());
 
                         return "其他文件处理：" + entryName;
                     },
@@ -344,7 +344,7 @@ public class SuperACTest {
                         // System.out.println("处理其他文件：" + zipName + "---" + entryName);
 
                         IOs.copy(input, output);
-                        output.write(("\n" + DateTime.nowDate() + ">>>>>>>这是这是新增加的一行\n").getBytes());
+                        output.write(("\n" + DateTime.now() + ">>>>>>>这是这是新增加的一行\n").getBytes());
 
                         return "其他文件处理：" + entryName;
                     },
@@ -407,7 +407,7 @@ public class SuperACTest {
                         // System.out.println("处理其他文件：" + zipName + "---" + entryName);
 
                         IOs.copy(input, output);
-                        output.write(("\n" + DateTime.nowDate() + ">>>>>>>这是这是新增加的一行\n").getBytes());
+                        output.write(("\n" + DateTime.now() + ">>>>>>>这是这是新增加的一行\n").getBytes());
 
                         return "其他文件处理：" + entryName;
                     },
@@ -517,7 +517,7 @@ public class SuperACTest {
                         // System.out.println("处理其他文件：" + zipName + "---" + entryName);
 
                         IOs.copy(input, output);
-                        output.write(("\n" + DateTime.nowDate() + ">>>>>>>这是这是新增加的一行\n").getBytes());
+                        output.write(("\n" + DateTime.now() + ">>>>>>>这是这是新增加的一行\n").getBytes());
 
                         return "其他文件处理：" + entryName;
                     },

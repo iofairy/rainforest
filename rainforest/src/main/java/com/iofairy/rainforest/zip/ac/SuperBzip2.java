@@ -16,7 +16,7 @@
 package com.iofairy.rainforest.zip.ac;
 
 import com.iofairy.falcon.io.*;
-import com.iofairy.falcon.time.Stopwatch;
+import com.iofairy.time.Stopwatch;
 import com.iofairy.falcon.zip.ArchiveFormat;
 import com.iofairy.lambda.*;
 import com.iofairy.rainforest.zip.attr.Bzip2InputProperty;

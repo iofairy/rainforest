@@ -23,7 +23,7 @@ import com.iofairy.falcon.fs.PathInfo;
 import com.iofairy.falcon.io.IOs;
 import com.iofairy.falcon.io.MultiByteArrayInputStream;
 import com.iofairy.falcon.io.MultiByteArrayOutputStream;
-import com.iofairy.falcon.time.Stopwatch;
+import com.iofairy.time.Stopwatch;
 import com.iofairy.falcon.zip.ArchiveFormat;
 import com.iofairy.lambda.*;
 import com.iofairy.rainforest.zip.attr.GzipInputProperty;
@@ -55,7 +55,7 @@ import java.nio.charset.Charset;
 import java.util.*;
 
 import static com.iofairy.falcon.zip.ArchiveFormat.*;
-import static com.iofairy.falcon.misc.Preconditions.*;
+import static com.iofairy.validator.Preconditions.*;
 
 /**
  * 接口 {@link SuperAC} 的抽象实现类，用于放置公共方法

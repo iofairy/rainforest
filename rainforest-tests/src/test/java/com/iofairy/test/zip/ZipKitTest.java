@@ -1,4 +1,4 @@
-package com.iofairy.test;
+package com.iofairy.test.zip;
 
 import com.iofairy.falcon.zip.ArchiveFormat;
 import com.iofairy.rainforest.zip.utils.ZipKit;

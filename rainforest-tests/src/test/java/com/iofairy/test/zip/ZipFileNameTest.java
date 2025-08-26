@@ -1,4 +1,4 @@
-package com.iofairy.test;
+package com.iofairy.test.zip;
 
 import com.iofairy.rainforest.zip.config.ZipFileName;
 import org.junit.jupiter.api.Test;

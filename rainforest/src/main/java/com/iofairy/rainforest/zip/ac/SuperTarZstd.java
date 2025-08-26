@@ -20,7 +20,7 @@ import com.github.luben.zstd.ZstdOutputStream;
 import com.iofairy.falcon.fs.FilePath;
 import com.iofairy.falcon.io.IOs;
 import com.iofairy.falcon.io.MultiByteArrayOutputStream;
-import com.iofairy.falcon.time.Stopwatch;
+import com.iofairy.time.Stopwatch;
 import com.iofairy.falcon.zip.ArchiveFormat;
 import com.iofairy.lambda.*;
 import com.iofairy.rainforest.zip.attr.*;
@@ -37,7 +37,7 @@ import org.apache.commons.compress.archivers.tar.TarArchiveOutputStream;
 import java.io.*;
 import java.util.*;
 
-import static com.iofairy.falcon.misc.Preconditions.*;
+import static com.iofairy.validator.Preconditions.*;
 
 /**
  * 超级.tar.zst / .tzst 解压缩与重压缩

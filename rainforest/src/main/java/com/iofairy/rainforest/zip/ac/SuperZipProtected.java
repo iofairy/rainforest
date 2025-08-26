@@ -16,7 +16,7 @@
 package com.iofairy.rainforest.zip.ac;
 
 import com.iofairy.falcon.io.*;
-import com.iofairy.falcon.time.Stopwatch;
+import com.iofairy.time.Stopwatch;
 import com.iofairy.falcon.zip.ArchiveFormat;
 import com.iofairy.lambda.*;
 import com.iofairy.rainforest.zip.attr.ZipInputProperty;
@@ -36,7 +36,7 @@ import java.io.*;
 import java.nio.charset.Charset;
 import java.util.*;
 
-import static com.iofairy.falcon.misc.Preconditions.*;
+import static com.iofairy.validator.Preconditions.*;
 
 /**
  * 超级ZIP（带密码保护）解压缩与重压缩
