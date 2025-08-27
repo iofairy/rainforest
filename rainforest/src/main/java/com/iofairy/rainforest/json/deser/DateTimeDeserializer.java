@@ -29,6 +29,14 @@ import java.time.format.DateTimeFormatter;
 
 /**
  * {@link DateTime} 反序列化器
+ * <br>
+ * <b>让此反序列化器快捷生效的方法:</b>
+ * <blockquote><pre>{@code
+ * import com.iofairy.rainforest.json.module.JacksonModules;
+ *
+ * ObjectMapper mapper = new ObjectMapper();
+ * JacksonModules.registerModules(mapper);
+ * }</pre></blockquote>
  *
  * @since 0.6.0
  */

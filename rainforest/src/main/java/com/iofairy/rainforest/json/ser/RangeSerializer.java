@@ -17,26 +17,27 @@ package com.iofairy.rainforest.json.ser;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.core.JsonGenerator;
-import com.fasterxml.jackson.core.JsonToken;
-import com.fasterxml.jackson.databind.*;
+import com.fasterxml.jackson.databind.JavaType;
+import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.ser.ContextualSerializer;
-import com.fasterxml.jackson.databind.ser.std.StdSerializer;
-import com.iofairy.range.Ranges;
-import com.iofairy.time.DateTime;
-import com.iofairy.time.DateTimePattern;
-import com.iofairy.time.DateTimes;
-import com.iofairy.time.TZ;
 import com.iofairy.range.Range;
+import com.iofairy.range.Ranges;
+import com.iofairy.time.DateTimes;
 import com.iofairy.top.O;
 
 import java.io.IOException;
 import java.time.format.DateTimeFormatter;
-import java.time.temporal.Temporal;
-import java.util.Calendar;
-import java.util.Date;
 
 /**
  * {@link Range} 序列化器
+ * <br>
+ * <b>让此序列化器快捷生效的方法:</b>
+ * <blockquote><pre>{@code
+ * import com.iofairy.rainforest.json.module.JacksonModules;
+ *
+ * ObjectMapper mapper = new ObjectMapper();
+ * JacksonModules.registerModules(mapper);
+ * }</pre></blockquote>
  *
  * @since 0.6.0
  */
@@ -50,11 +51,11 @@ public class RangeSerializer extends DatetimeBaseSerializer<Range> implements Co
     }
 
     public RangeSerializer(DateTimeFormatter formatter) {
-        super(Range.class);
+        super(Range.class, formatter);
     }
 
     public RangeSerializer(String pattern) {
-        super(Range.class);
+        super(Range.class, pattern);
     }
 
     protected RangeSerializer(Class<Range> clazz) {

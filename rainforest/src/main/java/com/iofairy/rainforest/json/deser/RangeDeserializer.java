@@ -18,10 +18,7 @@ package com.iofairy.rainforest.json.deser;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.core.*;
 import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.DeserializationContext;
-import com.fasterxml.jackson.databind.JavaType;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.*;
 import com.fasterxml.jackson.databind.deser.ContextualDeserializer;
 import com.iofairy.falcon.map.ComparableMap;
 import com.iofairy.range.*;
@@ -42,6 +39,14 @@ import static com.iofairy.validator.Preconditions.checkArgument;
 
 /**
  * {@link Range} 反序列化器
+ * <br>
+ * <b>让此反序列化器快捷生效的方法:</b>
+ * <blockquote><pre>{@code
+ * import com.iofairy.rainforest.json.module.JacksonModules;
+ *
+ * ObjectMapper mapper = new ObjectMapper();
+ * JacksonModules.registerModules(mapper);
+ * }</pre></blockquote>
  *
  * @since 0.6.0
  */
@@ -111,8 +116,6 @@ public class RangeDeserializer extends DateTimeBaseDeserializer<Range> implement
 
     @Override
     public Range<?> deserialize(JsonParser parser, DeserializationContext ctxt) throws IOException, JacksonException {
-        System.out.println("range反序列化：" + _currentType);
-
         JavaType currentType = _currentType;
         boolean canGetActualType = Try.tcfs(() -> _currentType.getBindings().getBoundType(0)) != null
                 && Try.tcfs(() -> _currentType.getBindings().getBoundType(0).getRawClass()) != Object.class;    // 是否能获取真实的 range泛型类型
@@ -176,9 +179,9 @@ public class RangeDeserializer extends DateTimeBaseDeserializer<Range> implement
 
                 throw new IllegalArgumentException();
             } catch (IllegalArgumentException e) {
-                throw new JsonParseException(parser, "The string '" + parser.getText() + "' cannot be parsed to a `Range` instance. ");
+                throw new JsonParseException(parser, "The string '" + parser.getText() + "' cannot be parsed to a `Range` instance for type " + getJavaTypeString(currentType) + ". ");
             } catch (Exception e) {
-                throw new JsonParseException(parser, "The string '" + parser.getText() + "' cannot be parsed to a `Range` instance. ", e);
+                throw new JsonParseException(parser, "The string '" + parser.getText() + "' cannot be parsed to a `Range` instance for type " + getJavaTypeString(currentType) + ". ", e);
             }
         }
 
@@ -193,6 +196,9 @@ public class RangeDeserializer extends DateTimeBaseDeserializer<Range> implement
             ObjectMapper mapper = (ObjectMapper) codec;
             JsonNode rangeJsonNode = mapper.readTree(parser);
             try {
+                /*
+                 注：BigDecimal 反序列化会失真，会当作Double来处理。可以开启此项配置 mapper.enable(DeserializationFeature.USE_BIG_DECIMAL_FOR_FLOATS);
+                 */
                 JsonNode lowerJsonNode = rangeJsonNode.get("lowerBound");
                 JsonNode upperJsonNode = rangeJsonNode.get("upperBound");
                 JsonNode intervalTypeJsonNode = rangeJsonNode.get("intervalType");
@@ -218,7 +224,7 @@ public class RangeDeserializer extends DateTimeBaseDeserializer<Range> implement
                 }
 
             } catch (Exception e) {
-                throw new JsonParseException(parser, "The JSON string '" + rangeJsonNode.toString() + "' cannot be parsed to a `Range` instance. ", e);
+                throw new JsonParseException(parser, "The JSON string '" + rangeJsonNode.toString() + "' cannot be parsed to a `Range` instance for type " + getJavaTypeString(currentType) + ". ", e);
             }
         }
 
@@ -375,5 +381,9 @@ public class RangeDeserializer extends DateTimeBaseDeserializer<Range> implement
         return EasyTuple.of(-1, -1);
     }
 
+    private static String getJavaTypeString(JavaType javaType) {
+        if (javaType == null) return null;
+        return "[" + javaType.toString().replaceAll("\\[simple type, class ", "").replaceAll("\\]", "") + "]";
+    }
 
 }

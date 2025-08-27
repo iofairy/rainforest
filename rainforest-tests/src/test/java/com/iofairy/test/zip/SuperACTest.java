@@ -3,6 +3,7 @@ package com.iofairy.test.zip;
 import cn.hutool.core.io.FileUtil;
 import com.iofairy.falcon.io.IOs;
 import com.iofairy.falcon.io.MultiByteArrayInputStream;
+import com.iofairy.falcon.iterable.CollectionKit;
 import com.iofairy.time.DateTime;
 import com.iofairy.falcon.util.Numbers;
 import com.iofairy.falcon.zip.ArchiveFormat;
@@ -145,10 +146,10 @@ public class SuperACTest {
 
             List<String> results = zipResult.getResults();
             log.info("===============================================================================");
-            System.out.println(results);
+            CollectionKit.divide(results, 5).forEach(e -> System.out.println("\t\t" + e));
 
             byte[][] bytes = zipResult.getBytes();
-            String outputFilename = "重压缩输出_" + Numbers.randomInt(4) + ".tar.bz2";
+            String outputFilename = "重压缩输出(混合)_" + Numbers.randomInt(4) + ".tar.bz2";
             log.info("输出的文件名：{}", outputFilename);
             File dest = new File(rezipOutputDir, outputFilename);
 
@@ -245,10 +246,10 @@ public class SuperACTest {
 
             List<String> results = zipResult.getResults();
             log.info("===============================================================================");
-            System.out.println(results);
+            CollectionKit.divide(results, 5).forEach(e -> System.out.println("\t\t" + e));
 
             byte[][] bytes = zipResult.getBytes();
-            String outputFilename = "重压缩输出_" + Numbers.randomInt(4) + ".7z";
+            String outputFilename = "重压缩输出(混合zstd)_" + Numbers.randomInt(4) + ".7z";
             log.info("输出的文件名：{}", outputFilename);
             File dest = new File(rezipOutputDir, outputFilename);
 
@@ -354,10 +355,10 @@ public class SuperACTest {
 
             List<String> results = zipResult.getResults();
             log.info("===============================================================================");
-            System.out.println(results);
+            CollectionKit.divide(results, 5).forEach(e -> System.out.println("\t\t" + e));
 
             byte[][] bytes = zipResult.getBytes();
-            String outputFilename = "重压缩输出_" + Numbers.randomInt(4) + ".7z";
+            String outputFilename = "重压缩输出（带密码）_" + Numbers.randomInt(4) + ".7z";
             log.info("输出的文件名：{}", outputFilename);
             File dest = new File(rezipOutputDir, outputFilename);
 
@@ -417,7 +418,7 @@ public class SuperACTest {
 
             List<String> results = zipResult.getResults();
             log.info("===============================================================================");
-            System.out.println(results);
+            CollectionKit.divide(results, 5).forEach(e -> System.out.println("\t\t" + e));
 
             byte[][] bytes = zipResult.getBytes();
             String outputFilename = "重压缩输出_" + Numbers.randomInt(4) + ".7z";
@@ -527,10 +528,10 @@ public class SuperACTest {
 
             List<String> results = zipResult.getResults();
             log.info("===============================================================================");
-            System.out.println(results);
+            CollectionKit.divide(results, 5).forEach(e -> System.out.println("\t\t" + e));
 
             byte[][] bytes = zipResult.getBytes();
-            String outputFilename = "重压缩输出_" + Numbers.randomInt(4) + ".7z";
+            String outputFilename = "重压缩输出（带密码1）_" + Numbers.randomInt(4) + ".7z";
             log.info("输出的文件名：{}", outputFilename);
             File dest = new File(rezipOutputDir, outputFilename);
 
@@ -551,7 +552,7 @@ public class SuperACTest {
         String zipFileName = "unzip.zip";
 
         try (FileInputStream is = new FileInputStream(new File(zipDir, zipFileName))) {
-            List<Tuple2<String, Long>> result = SuperAC.unzip(
+            List<Tuple2<String, Long>> results = SuperAC.unzip(
                     is,
                     ArchiveFormat.ZIP,                     // 压缩包的类型
                     zipFileName,                                      // 压缩包名称
@@ -569,7 +570,7 @@ public class SuperACTest {
                     SuperACs.allSupportedSuperACs()
             );
             log.info("===============================================================================");
-            System.out.println(result);
+            CollectionKit.divide(results, 5).forEach(e -> System.out.println("\t\t" + e));
             log.info("===============================================================================");
 
         } catch (Exception e) {
@@ -592,7 +593,7 @@ public class SuperACTest {
             List<SuperAC> superACs = SuperACs.allSupportedSuperACs();
             superACs.add(super7Zip);
 
-            List<Tuple2<String, Long>> result = SuperAC.unzipFast(
+            List<Tuple2<String, Long>> results = SuperAC.unzipFast(
                     is,
                     ArchiveFormat.GZIP,                     // 压缩包的类型
                     zipFileName,                                      // 压缩包名称
@@ -607,7 +608,7 @@ public class SuperACTest {
             );
 
             log.info("===============================================================================");
-            System.out.println(result);
+            CollectionKit.divide(results, 5).forEach(e -> System.out.println("\t\t" + e));
             log.info("===============================================================================");
 
         } catch (Exception e) {
