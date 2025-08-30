@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.iofairy.rainforest.json.ser;
+package com.iofairy.rainforest.jackson.ser;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.databind.*;
@@ -62,7 +62,7 @@ public abstract class DatetimeBaseSerializer<T> extends StdSerializer<T> impleme
 
     protected DatetimeBaseSerializer(Class<T> clazz) {
         super(clazz);
-        _formatter = DateTimes.STD_DTF;
+        _formatter = DateTimes.DTF_STD;
         _currentType = null;
         _useTimestamp = null;
         _writeZoneId = null;
@@ -163,7 +163,7 @@ public abstract class DatetimeBaseSerializer<T> extends StdSerializer<T> impleme
     }
 
     protected DateTimeFormatter getFormatter(DateTimeFormatter formatter, SerializerProvider provider) {
-        formatter = formatter == null ? DateTimes.STD_DTF : formatter;
+        formatter = formatter == null ? DateTimes.DTF_STD : formatter;
         if (formatter.getZone() == null) {
             if (provider.getConfig().hasExplicitTimeZone() && provider.isEnabled(WRITE_DATES_WITH_CONTEXT_TIME_ZONE)) {
                 formatter = formatter.withZone(provider.getTimeZone().toZoneId());

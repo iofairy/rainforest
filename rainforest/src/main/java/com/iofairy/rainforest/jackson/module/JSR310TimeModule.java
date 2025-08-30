@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.iofairy.rainforest.json.module;
+package com.iofairy.rainforest.jackson.module;
 
 import com.fasterxml.jackson.databind.module.SimpleDeserializers;
 import com.fasterxml.jackson.databind.module.SimpleKeyDeserializers;
@@ -33,13 +33,13 @@ import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 
 /**
- * 注册 {@code DateTime} Json序列化/反序列化模块
+ * 注册 Java8时间类 Json序列化/反序列化模块
  *
  * @since 0.6.0
  */
 public class JSR310TimeModule extends CommonModule {
 
-    protected static final String MODULE_NAME = "jsr310time-module";
+    protected static final String MODULE_NAME = JSR310TimeModule.class.getName();
 
     public JSR310TimeModule() {
         super(getVersion(MODULE_NAME));

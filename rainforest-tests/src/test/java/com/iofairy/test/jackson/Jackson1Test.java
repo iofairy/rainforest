@@ -1,4 +1,4 @@
-package com.iofairy.test.json;
+package com.iofairy.test.jackson;
 
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -6,9 +6,10 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.iofairy.falcon.map.ComparableMap;
-import com.iofairy.rainforest.json.module.JacksonModules;
+import com.iofairy.rainforest.jackson.module.JacksonModules;
 import com.iofairy.range.Range;
 import com.iofairy.time.DateTime;
+import com.iofairy.time.DateTimes;
 import lombok.SneakyThrows;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -17,7 +18,7 @@ import java.math.BigDecimal;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
-import static com.iofairy.test.json.JsonModel.*;
+import static com.iofairy.test.jackson.JsonModel.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
@@ -50,7 +51,9 @@ public class Jackson1Test {
         Date start3 = DateTime.parse("2025-01-10 09:01:50.246").toDate();
         Date end3 = DateTime.parse("2024-09-28 15:30:00.783").toDate();
         model.dt = start1;
+        model.dt1 = start1;
         model.dtRange = Range.open(start1, null);
+        model.dtRange1 = Range.closedOpen(null, null);
         model.bigDecimal = new BigDecimal("5687994463556887999945956.658987456985699935500000");
         model.rangeWithFormat = Range.closedOpen(start3, end3);
         model.rangeNonFormat = Range.closedOpen(start3, end3);
@@ -61,6 +64,7 @@ public class Jackson1Test {
                 Range.openClosed(null, new Compare1<>("c", 5, 6)),
                 Range.open(start1, end1),
                 Range.closed(new BigDecimal(1), new BigDecimal("5687994463556887999945956.658987456985699935500000")),
+                Range.closed(new BigDecimal("568799665898756"), new BigDecimal("-5687996.658987569")),
                 Range.open(true, false)
         );
         model.compare1Range = Range.open(new Compare1<>("a", 1, 2), new Compare1<>("b", 2, 3));
@@ -79,12 +83,12 @@ public class Jackson1Test {
         Model newModel = mapper.readValue(json, Model.class);
         System.out.println(newModel);
 
-        assertTrue(model.rangeWithFormat.isEmpty);
-        assertEquals(6, model.ranges.size());
-        assertSame(Compare1.class, model.compare1Range.start.getClass());
-        assertEquals("['2025-01-10 09:01:50', '2024-09-28 15:30:00')", model.rangeWithFormat.toString());
-        assertEquals("{1=['2025-08-19 09:01:50', '2025-08-20 16:30:00'], 2=('2022-07-20 09:01:50', '2020-03-15 06:30:08')}", model.dtRangeMap.toString());
-        assertEquals("{1=[('2025-08-19 09:01:50', '2025-08-20 16:30:00'), ('2022-07-20 09:01:50', '2020-03-15 06:30:08')]}", model.dtRangesMap.toString());
+        assertTrue(newModel.rangeWithFormat.isEmpty);
+        assertEquals(7, newModel.ranges.size());
+        assertSame(Compare1.class, newModel.compare1Range.start.getClass());
+        assertEquals("['2025-01-10 09:01:50', '2024-09-28 15:30:00')", newModel.rangeWithFormat.toString());
+        assertEquals("['2025-08-19 03:01:50.365 [GMT+02:00 +02:00]', '2025-08-20 10:30:00.853 [GMT+02:00 +02:00]']", newModel.dtRangeMap.get(1).toString(DateTimes.DTF_MS_ZONE_OFFSET));
+        assertEquals("{1=[('2025-08-19 09:01:50', '2025-08-20 16:30:00'), ('2022-07-20 09:01:50', '2020-03-15 06:30:08')]}", newModel.dtRangesMap.toString());
 
     }
 

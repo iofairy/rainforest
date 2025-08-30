@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.iofairy.rainforest.json.deser;
+package com.iofairy.rainforest.jackson.deser;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.core.JsonParser;
@@ -168,12 +168,6 @@ public abstract class DateTimeBaseDeserializer<T> extends StdScalarDeserializer<
         return enabled;
     }
 
-    protected void _throwNoNumericTimestampNeedTimeZone(JsonParser p, DeserializationContext ctxt)
-            throws IOException {
-        ctxt.reportInputMismatch(handledType(),
-                "raw timestamp (%d) not allowed for `%s`: need additional information such as an offset or time-zone (see class Javadocs)",
-                p.getNumberValue(), handledType().getName());
-    }
 
     @SuppressWarnings("unchecked")
     protected <R> R _handleUnexpectedToken(DeserializationContext context, JsonParser parser, String message, Object... args) throws JsonMappingException {

@@ -1,4 +1,4 @@
-package com.iofairy.test.json;
+package com.iofairy.test.jackson;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.iofairy.range.Range;
@@ -18,8 +18,11 @@ public class JsonModel {
     @Data
     public static class Model {
         DateTime dt;
+        @JsonFormat(pattern = "yyyyMMddHHmmss '['VV']'", timezone = "UTC", shape = JsonFormat.Shape.NUMBER)
         DateTime dt1;
+        DateTime dt2;
         Range<DateTime> dtRange;
+        Range<?> dtRange1;
         BigDecimal bigDecimal;
         @JsonFormat(pattern = "yyyyMMddHHmmss '['VV']'", timezone = "GMT-4", shape = JsonFormat.Shape.NUMBER_INT)
         Range<?> rangeWithFormat;

@@ -13,12 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.iofairy.rainforest.json.module;
+package com.iofairy.rainforest.jackson.module;
 
 import com.fasterxml.jackson.databind.module.SimpleDeserializers;
 import com.fasterxml.jackson.databind.module.SimpleSerializers;
-import com.iofairy.rainforest.json.deser.RangeDeserializer;
-import com.iofairy.rainforest.json.ser.RangeSerializer;
+import com.iofairy.rainforest.jackson.deser.RangeDeserializer;
+import com.iofairy.rainforest.jackson.ser.RangeSerializer;
 import com.iofairy.range.Range;
 
 import java.time.format.DateTimeFormatter;
@@ -30,7 +30,7 @@ import java.time.format.DateTimeFormatter;
  */
 public class RangeModule extends CommonModule {
 
-    protected static final String MODULE_NAME = "range-module";
+    protected static final String MODULE_NAME = RangeModule.class.getName();
 
     public RangeModule() {
         super(getVersion(MODULE_NAME));

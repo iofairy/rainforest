@@ -13,16 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.iofairy.rainforest.json.module;
+package com.iofairy.rainforest.jackson.module;
 
 import com.fasterxml.jackson.databind.module.SimpleDeserializers;
 import com.fasterxml.jackson.databind.module.SimpleKeyDeserializers;
 import com.fasterxml.jackson.databind.module.SimpleSerializers;
 import com.iofairy.time.DateTime;
-import com.iofairy.rainforest.json.deser.DateTimeDeserializer;
-import com.iofairy.rainforest.json.deser.DateTimeKeyDeserializer;
-import com.iofairy.rainforest.json.ser.DateTimeKeySerializer;
-import com.iofairy.rainforest.json.ser.DatetimeSerializer;
+import com.iofairy.rainforest.jackson.deser.DateTimeDeserializer;
+import com.iofairy.rainforest.jackson.deser.DateTimeKeyDeserializer;
+import com.iofairy.rainforest.jackson.ser.DateTimeKeySerializer;
+import com.iofairy.rainforest.jackson.ser.DatetimeSerializer;
 
 import java.time.format.DateTimeFormatter;
 
@@ -33,7 +33,7 @@ import java.time.format.DateTimeFormatter;
  */
 public class DateTimeModule extends CommonModule {
 
-    protected static final String MODULE_NAME = "datetime-module";
+    protected static final String MODULE_NAME = DateTimeModule.class.getName();
 
     public DateTimeModule() {
         super(getVersion(MODULE_NAME));

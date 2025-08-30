@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.iofairy.rainforest.json.ser;
+package com.iofairy.rainforest.jackson.ser;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.core.JsonGenerator;
@@ -49,7 +49,7 @@ public class DatetimeSerializer extends DatetimeBaseSerializer<DateTime> impleme
     public static final DatetimeSerializer INSTANCE = new DatetimeSerializer();
 
     protected DatetimeSerializer() {
-        this(DateTimes.STD_DTF);
+        this(DateTimes.DTF_STD);
     }
 
     public DatetimeSerializer(DateTimeFormatter formatter) {
@@ -107,7 +107,7 @@ public class DatetimeSerializer extends DatetimeBaseSerializer<DateTime> impleme
             if ((_formatter != null) && (_shape == JsonFormat.Shape.STRING)) {
 
             } else if (shouldWriteWithZoneId(provider)) {
-                DateTimeFormatter formatter = _formatter == null ? DateTimes.STD_DTF : _formatter;
+                DateTimeFormatter formatter = _formatter == null ? DateTimes.DTF_STD : _formatter;
                 gen.writeString(DateTimes.withTimeZone(formatter).format(value));
                 return;
             }

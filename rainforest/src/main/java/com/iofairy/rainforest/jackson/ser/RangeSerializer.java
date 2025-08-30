@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.iofairy.rainforest.json.ser;
+package com.iofairy.rainforest.jackson.ser;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.core.JsonGenerator;
@@ -47,7 +47,7 @@ public class RangeSerializer extends DatetimeBaseSerializer<Range> implements Co
     public static final RangeSerializer INSTANCE = new RangeSerializer();
 
     protected RangeSerializer() {
-        this(DateTimes.STD_DTF);
+        this(DateTimes.DTF_STD);
     }
 
     public RangeSerializer(DateTimeFormatter formatter) {
@@ -103,6 +103,7 @@ public class RangeSerializer extends DatetimeBaseSerializer<Range> implements Co
 
         if (value.lowerBound == null && value.upperBound == null) {
             gen.writeString(value.toString());
+            return;
         } else if (value.lowerBound == null || value.upperBound == null) {
             Comparable<?> comparable = O.firstNonNull(value.lowerBound, value.upperBound);
             if (Ranges.isSupportedParseRangeString(comparable.getClass())) {
