@@ -29,6 +29,7 @@ implementation 'com.iofairy:rainforest:0.6.0'
   - [unzipFast（快速无限解压工具）](#unzipFast快速无限解压工具)
   - [reZip（无限解压与修改压缩包内容重新压缩）](#reZip无限解压与修改压缩包内容重新压缩)
   - [支持的解压/压缩格式](#支持的解压与压缩格式)
+- [📝`DateTime`与`Range`类的Swagger配置](#DateTime与Range类的Swagger配置)
 
 ## 🔥SuperAC（压缩包处理）
 **SuperAC**是Super **Archiver** and **Compressor**的简称。可用于处理复杂的压缩包业务逻辑。  
@@ -274,6 +275,30 @@ List<SuperAC> superACS = SuperACs.allSupportedSuperACs();
 List<ArchiveFormat> formats = superACS.stream().map(e -> e.format()).collect(Collectors.toList());
 System.out.println(formats);    // [SEVEN_ZIP, BZIP2, GZIP, TAR, TAR_BZ2, TAR_GZ, TAR_XZ, XZ, ZIP]
 ```
+
+## 📝DateTime与Range类的Swagger配置
+为了更友好的查看包含`DateTime`与`Range`类的Swagger文档，建议在你的项目中添加如下配置：
+```java
+import com.iofairy.range.Range;
+import com.iofairy.time.DateTime;
+import com.fasterxml.classmate.TypeResolver;
+import springfox.documentation.spring.web.plugins.Docket;
+
+@Bean
+public Docket api() {
+  TypeResolver typeResolver = new TypeResolver();
+
+  return new Docket(DocumentationType.OAS_30)
+          .apiInfo(apiInfo())
+          // ... 
+          .select()
+          .build()
+          .directModelSubstitute(DateTime.class, String.class)      // DateTime 类替换为 String
+          .alternateTypeRules(AlternateTypeRules.newRule(typeResolver.resolve(Range.class, WildcardType.class), String.class, 0));  // Range 类替换为 String
+}
+
+```
+
 
 ## ⭐点个赞哟
 如果你喜欢 rainforest，感觉 rainforest 帮助到了你，可以点右上角 **Star** 支持一下哦，感谢感谢！
