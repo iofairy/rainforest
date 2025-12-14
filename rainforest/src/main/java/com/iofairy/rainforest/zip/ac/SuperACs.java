@@ -579,4 +579,24 @@ public abstract class SuperACs implements SuperAC {
     }
 
 
+    /**
+     * 检查文件名是否存在路径遍历攻击风险
+     *
+     * @param fileName 待检查的文件名（可能来自压缩包条目）
+     * @return {@code true} 存在路径遍历风险； {@code false} 安全
+     * @since 0.6.1
+     */
+    public static boolean hasPathTraversalRisk(String fileName) {
+        if (fileName == null) return false;
+
+        return fileName.startsWith("/")
+                || fileName.startsWith("\\")
+                || fileName.startsWith("../")
+                || fileName.startsWith("..\\")
+                || fileName.contains("/../")
+                || fileName.contains("/..\\")
+                || fileName.contains("\\../")
+                || fileName.contains("\\..\\");
+    }
+    
 }

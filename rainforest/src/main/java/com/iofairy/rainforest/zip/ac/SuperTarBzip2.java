@@ -175,6 +175,10 @@ public class SuperTarBzip2 extends SuperACs {
             while ((entry = (TarArchiveEntry) zipis.getNextEntry()) != null) {
                 String entryFileName = entry.getName();
                 if (entry.isDirectory()) continue;
+                if (hasPathTraversalRisk(entryFileName)) {
+                    LogPrinter.printSkipEntryLogs(unzipId, unzipTimes, zipFileName, entryFileName, zipLogLevel, logSource);
+                    continue;
+                }
 
                 unzip(zipis, rs, zipFileName, entryFileName, unzipTimes, unzipLevel, newUnzipTimes, newUnzipLevel, unzipACMap,
                         unzipFilter, otherFilter, beforeUnzipFilter, beforeUnzipAction, otherAction, zipLogLevel, unzipId, logSource);
@@ -257,6 +261,10 @@ public class SuperTarBzip2 extends SuperACs {
             while ((entry = (TarArchiveEntry) zipis.getNextEntry()) != null) {
                 String entryFileName = entry.getName();
                 if (entry.isDirectory()) continue;
+                if (hasPathTraversalRisk(entryFileName)) {
+                    LogPrinter.printSkipEntryLogs(unzipId, unzipTimes, zipFileName, entryFileName, zipLogLevel, logSource);
+                    continue;
+                }
 
                 unzipFast(zipis, rs, zipFileName, entryFileName, unzipTimes, unzipLevel, newUnzipTimes, newUnzipLevel, unzipACMap,
                         unzipFilter, otherFilter, otherAction, zipLogLevel, unzipId, logSource, closeables);
@@ -357,6 +365,10 @@ public class SuperTarBzip2 extends SuperACs {
             TarArchiveEntry entry;
             while ((entry = (TarArchiveEntry) zipis.getNextEntry()) != null) {
                 String entryFileName = entry.getName();
+                if (hasPathTraversalRisk(entryFileName)) {
+                    LogPrinter.printSkipEntryLogs(unzipId, unzipTimes, zipFileName, entryFileName, zipLogLevel, logSource);
+                    continue;
+                }
 
                 /*
                  * 删除文件

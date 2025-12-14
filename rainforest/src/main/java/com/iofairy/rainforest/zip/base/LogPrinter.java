@@ -36,6 +36,10 @@ public class LogPrinter {
         log.info(format, arguments);
     }
 
+    public static void warnLogs(String format, Object... arguments) {
+        log.warn(format, arguments);
+    }
+
     public static void printBeforeUnzip(String unzipId, String zipFileName, ZipLogLevel zipLogLevel, String logSource) {
         if (zipLogLevel.level >= ZipLogLevel.BRIEF.level) {
             logs(">*>*>*>*>*>*>*>*>*>*>*>*>*>*>*>*>*>*>*> 解压ID：[{}]，压缩包【{}】正在处理…… <<{}>>", unzipId, zipFileName, logSource);
@@ -138,6 +142,12 @@ public class LogPrinter {
         if (zipLogLevel.level >= ZipLogLevel.ALL.level) {
             String repeat = S.repeat("&", getRepeatTimes(unzipTimes) * REPEAT_FACTOR);
             logs("{} 解压ID：[{}]，当前unzipTimes为：[{}]，【{}】中的压缩包【{}】解压缩【{}】处理！ <<{}>>", repeat, unzipId, unzipTimes, zipFileName, entryFileName, extMsg, logSource);
+        }
+    }
+
+    public static void printSkipEntryLogs(String unzipId, int unzipTimes, String zipFileName, String entryFileName, ZipLogLevel zipLogLevel, String logSource) {
+        if (zipLogLevel.level >= ZipLogLevel.BRIEF.level) {
+            warnLogs("解压ID：[{}]，当前unzipTimes为：[{}]，包含【路径遍历风险】，【{}】中的文件【{}】被跳过！！！ <<{}>>", unzipId, unzipTimes, zipFileName, entryFileName, logSource);
         }
     }
 

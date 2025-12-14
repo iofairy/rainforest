@@ -170,6 +170,10 @@ public class SuperZipProtected extends SuperACs {
             while ((entry = zipis.getNextEntry()) != null) {
                 String entryFileName = entry.getFileName();
                 if (entry.isDirectory()) continue;
+                if (hasPathTraversalRisk(entryFileName)) {
+                    LogPrinter.printSkipEntryLogs(unzipId, unzipTimes, zipFileName, entryFileName, zipLogLevel, logSource);
+                    continue;
+                }
 
                 unzip(zipis, rs, zipFileName, entryFileName, unzipTimes, unzipLevel, newUnzipTimes, newUnzipLevel, unzipACMap,
                         unzipFilter, otherFilter, beforeUnzipFilter, beforeUnzipAction, otherAction, zipLogLevel, unzipId, logSource);
@@ -249,6 +253,10 @@ public class SuperZipProtected extends SuperACs {
             while ((entry = zipis.getNextEntry()) != null) {
                 String entryFileName = entry.getFileName();
                 if (entry.isDirectory()) continue;
+                if (hasPathTraversalRisk(entryFileName)) {
+                    LogPrinter.printSkipEntryLogs(unzipId, unzipTimes, zipFileName, entryFileName, zipLogLevel, logSource);
+                    continue;
+                }
 
                 unzipFast(zipis, rs, zipFileName, entryFileName, unzipTimes, unzipLevel, newUnzipTimes, newUnzipLevel, unzipACMap,
                         unzipFilter, otherFilter, otherAction, zipLogLevel, unzipId, logSource, closeables);
@@ -348,6 +356,10 @@ public class SuperZipProtected extends SuperACs {
             LocalFileHeader entry;
             while ((entry = zipis.getNextEntry()) != null) {
                 String entryFileName = entry.getFileName();
+                if (hasPathTraversalRisk(entryFileName)) {
+                    LogPrinter.printSkipEntryLogs(unzipId, unzipTimes, zipFileName, entryFileName, zipLogLevel, logSource);
+                    continue;
+                }
 
                 /*
                  * 删除文件
